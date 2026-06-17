@@ -59,14 +59,23 @@ def evaluateTrain(train,test,cats):
 
     model.fit(X_train, y_train)
     pred = model.predict(X_test)
-    print(metrics(y_test, pred))
+    results = metrics(y_test, pred)
+    print(results)
 
     X_all = pd.concat([X_train, X_test])
     y_all = pd.concat([y_train, y_test])
     model.fit(X_all, y_all)   
     print("trained on", len(X_all), "rows")
-    joblib.dump(model, 'model.joblib')
-    joblib.dump(cats,  'categories.joblib')
+    # joblib.dump(model, 'model.joblib')
+    # joblib.dump(cats,  'categories.joblib')
+    bundle = {
+        "model": model,
+        "features": feature_cols,
+        "categories": cats,
+        "metrics": results,
+    }
+    joblib.dump(bundle, 'model.joblib')
+
 
 if __name__ == "__main__":
     df, cats = build()

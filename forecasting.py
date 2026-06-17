@@ -1,7 +1,8 @@
 import joblib
 
-model = joblib.load('model.joblib')
-cats = joblib.load('categories.joblib')
+bundle = joblib.load('model.joblib')
+model = bundle["model"]
+cats  = bundle["categories"]
 
 import train as tr
 
