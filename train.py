@@ -11,6 +11,12 @@ DB = "prepcast.db"
 # connect to db and query
 def load_data():
     conn = sqlite3.connect(DB)
-    raw = ""
+    raw = pd.read_sql_query("""
+        SELECT *
+        FROM demand_history d
+        JOIN centre c ON c.centre_id = d.centre_id
+        JOIN meal   m ON m.meal_id   = d.meal_id
+    """, conn)
     conn.close()
     return raw
+
