@@ -40,21 +40,35 @@ def split(df):
     test = df[df['week'] > cutoff]
     return train, test
 
-# evaluate models
-def evaluate(train,test):
-    drop_cols = ['num_orders', 'id', 'category', 'cuisine', 'centre_type']
-    feature_cols = [c for c in df.columns if c not in drop_cols]
+# evaluate and train model
+def evaluateTrain(train,test,cats):
+    drop_cols = ['num_orders', 'category', 'cuisine', 'centre_type']
+    feature_cols = [c for c in train.columns if c not in drop_cols]
     X_train, y_train = train[feature_cols], train['num_orders']
     X_test,  y_test  = test[feature_cols],  test['num_orders']
 
-    models = {
-        'LinearRegression': LinearRegression(),
-        'RandomForest': RandomForestRegressor(n_estimators=100, max_depth=18,
-                            max_samples=0.5, n_jobs=-1, random_state=42),
-        'GradientBoosting': HistGradientBoostingRegressor(max_iter=300, random_state=42),
-    }
+    model = RandomForestRegressor(n_estimators=100, max_depth=18,
+                              max_samples=0.5, n_jobs=-1, random_state=42)
 
-    model = models['RandomForest']
-    model.fit(X_train, y_train)   
-    print("trained on", len(X_train), "rows")
+    def metrics(y_true, y_pred):
+        return{
+            'rmse' : mean_squared_error(y_true, y_pred) ** 0.5,
+            'mae' : mean_absolute_error(y_true, y_pred),
+            'r2' :r2_score(y_true, y_pred)
+        }
+
+    model.fit(X_train, y_train)
+    pred = model.predict(X_test)
+    print(metrics(y_test, pred))
+
+    X_all = pd.concat([X_train, X_test])
+    y_all = pd.concat([y_train, y_test])
+    model.fit(X_all, y_all)   
+    print("trained on", len(X_all), "rows")
     joblib.dump(model, 'model.joblib')
+    joblib.dump(cats,  'categories.joblib')
+
+if __name__ == "__main__":
+    df, cats = build()
+    train, test = split(df)
+    evaluateTrain(train, test, cats)
