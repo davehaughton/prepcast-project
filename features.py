@@ -8,7 +8,7 @@ CAT_COLS = ['category', 'cuisine', 'centre_type']
 def add_lags(df): 
     df = df.copy()
     for n in (1, 2, 3, 5):
-        df[f'lag_{n}'] = df.groupby(['centre_id','meal_id'])['num_orders'].shift(n)
+        df[f'lag_{n}'] = df.groupby(GROUP)['num_orders'].shift(n)
     return df   
 
 # roll_3/10 (shift(1))
