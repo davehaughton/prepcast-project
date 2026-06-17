@@ -5,6 +5,7 @@ from pathlib import Path
 DB   = 'prepcast.db'
 DATA = 'dataset' 
 
+CENTRE_NAMES = {}
 
 Path(DB).unlink(missing_ok=True)
 
