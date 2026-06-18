@@ -17,6 +17,14 @@
             
            </select>
 
+           <label>Promotion: 
+           <input type="checkbox" id="promo">
+           </label>
+
+           <label>Discount: 
+            <input type="range" id="discount" min="0" max="0.5" step="0.05" value="0">
+           </label>
+
            <div id="output-table" class="bg-white rounded-xl shadow overflow-x-auto">
                 <table class="w-full text-sm">
                 <thead class="bg-slate-800 text-white text-left">
@@ -44,9 +52,15 @@
                 .map(c => `<option value="${c.centre_id}">Centre ${c.centre_id}</option>`)
                 .join("");
             }
-            async function loadForecast(centre_id) {
+            async function loadForecast() {
                 //console.log(centre_id);
-                const res = await fetch(`/api/forecast?centre_id=${centre_id}`);
+                
+                // const res = await fetch(`/api/forecast?centre_id=${centre_id}`);
+                const centre_id = document.getElementById("centre-picker").value;
+                const promo = document.getElementById("promo").checked ? 1 : 0;
+                const discount = document.getElementById("discount").value;
+                const res = await fetch(`/api/forecast?centre_id=${centre_id}&promo=${promo}&discount=${discount}`);
+
                 currentRows = await res.json();
                 renderForecast();
 
@@ -71,9 +85,15 @@
             }
 
             async function init() {
-                loadCentres();
+                await loadCentres();
                 const picker = document.getElementById("centre-picker");
-                picker.addEventListener("change", () => loadForecast(picker.value));
+                const promo = document.getElementById("promo");
+                const discount = document.getElementById("discount");
+                picker.addEventListener("change", () => loadForecast());
+                promo.addEventListener("change", () => loadForecast());
+                discount.addEventListener("change", () => loadForecast());
+
+                loadForecast();
             }
             init();
         </script>
