@@ -7,6 +7,7 @@ def main():
     df = fc.predict_next_week()
 
     conn = sqlite3.connect(DB)
+    conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("DELETE FROM forecast")
     conn.execute("DELETE FROM sqlite_sequence WHERE name = 'forecast'")
     df.to_sql("forecast", conn, if_exists="append", index=False)
