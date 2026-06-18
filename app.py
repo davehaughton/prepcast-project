@@ -1,6 +1,7 @@
 from flask import Flask
 import sqlite3
 import pandas as pd
+from flask import jsonify
 
 app = Flask(__name__)
 DB = "prepcast.db"
@@ -19,7 +20,7 @@ def centres():
     df = pd.read_sql_query("SELECT centre_id, centre_type "
         "FROM centre ORDER BY centre_id", conn)
     conn.close()
-    return df.to_html(index=False)
+    return jsonify(df)
 
 if __name__ == "__main__":
     app.run(debug=True)
