@@ -26,6 +26,7 @@
 
                 <label>Discount: 
                     <input type="range" id="discount" min="0" max="0.5" step="0.05" value="0">
+                     <span id="discount-label">0%</span>
                 </label>
             </div>
 
@@ -88,6 +89,12 @@
                 
                 document.getElementById("forecast-rows").innerHTML = currentRows.map(rowHtml).join("");
             }
+
+            discount.addEventListener("input", () => {
+                document.getElementById("discount-label").textContent =
+                    Math.round(discount.value * 100) + "%";
+            });
+
 
             async function init() {
                 await loadCentres();
