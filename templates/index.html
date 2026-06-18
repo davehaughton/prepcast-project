@@ -11,20 +11,25 @@
     <body class="bg-slate-100 text-slate-800 min-h-screen">
         <div class="max-w-6xl mx-auto p-6">
             <h1>PrepCast</h1> 
+            <div class="top_row flex gap-8 py-4 justify-between">
 
-           <h3>Select centre</h3>
-           <select id="centre-picker">
-            
-           </select>
+            <label>Select centre: 
+            <select id="centre-picker">
+            </select>
+            </label>
 
-           <label>Promotion: 
-           <input type="checkbox" id="promo">
-           </label>
 
-           <label>Discount: 
-            <input type="range" id="discount" min="0" max="0.5" step="0.05" value="0">
-           </label>
+            <div class="promo_discount flex gap-8 justify-between">
+                <label>Promotion: 
+                <input type="checkbox" id="promo">
+                </label>
 
+                <label>Discount: 
+                    <input type="range" id="discount" min="0" max="0.5" step="0.05" value="0">
+                </label>
+            </div>
+
+           </div>
            <div id="output-table" class="bg-white rounded-xl shadow overflow-x-auto">
                 <table class="w-full text-sm">
                 <thead class="bg-slate-800 text-white text-left">
