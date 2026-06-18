@@ -15,7 +15,8 @@ def main():
 
     # check
     print("rows:", conn.execute("SELECT COUNT(*) FROM forecast").fetchone()[0])
-
+    print("fk check:", conn.execute("PRAGMA foreign_key_check").fetchall())
+    print(df.head(3).to_string())
     conn.close()
 
 
