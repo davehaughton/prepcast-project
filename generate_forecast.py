@@ -16,3 +16,7 @@ def main():
     print("rows:", conn.execute("SELECT COUNT(*) FROM forecast").fecthone()[0])
 
     conn.close()
+
+
+if __name__ == "__main__":
+    main()
