@@ -13,11 +13,30 @@
             <h1>PrepCast</h1> 
 
            <h3>Select centre</h3>
-           <select id="centre-picker"></select>
+           <select id="centre-picker">
+            
+           </select>
 
-           <div id="output-table"></div>
+           <div id="output-table" class="bg-white rounded-xl shadow overflow-x-auto">
+                <table class="w-full text-sm">
+                <thead class="bg-slate-800 text-white text-left">
+                    <tr>
+                        <th class="px-4 py-3">Category</th>
+                        <th class="px-4 py-3">Cuisine</th>
+                        <th class="px-4 py-3 text-right">Last week</th>
+                        <th class="px-4 py-3 text-right">Forecast</th>
+                        <th class="px-4 py-3 text-right">Buffer</th>
+                        <th class="px-4 py-3 text-right">Recommended Prep</th>
+                    </tr>
+                </thead>
+                <tbody id="forecast-rows"></tbody>
+                </table>
+           </div>
         </div>
         <script>
+
+            let currentRows = [];
+
             async function loadCentres() {
                 const res = await fetch("/api/centres");
                 const centres = await res.json();
@@ -26,8 +45,31 @@
                 .join("");
             }
             async function loadForecast(centre_id) {
-                console.log(centre_id);
+                //console.log(centre_id);
+                const res = await fetch(`/api/forecast?centre_id=${centre_id}`);
+                currentRows = await res.json();
+                renderForecast();
+
             }
+            function renderForecast() {
+                
+                const rowHtml = r => {
+                    const safety = 0; //todo
+                    const rec    = r.predicted_demand + safety;
+                    return `<tr class="border-t border-slate-100 hover:bg-slate-50">
+                    <td class="px-4 py-2">${r.category}</td>
+                    <td class="px-4 py-2">${r.cuisine}</td>
+                    <td class="px-4 py-2 text-right">${r.last_week_orders}</td>
+                    <td class="px-4 py-2 text-right">${r.predicted_demand}</td>
+                    <td class="px-4 py-2 text-right">${safety}</td>
+                    <td class="px-4 py-2 text-right">${rec}</td>
+                    </tr>`;
+                };
+
+                
+                document.getElementById("forecast-rows").innerHTML = currentRows.map(rowHtml).join("");
+            }
+
             async function init() {
                 loadCentres();
                 const picker = document.getElementById("centre-picker");
