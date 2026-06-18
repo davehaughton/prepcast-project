@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import sqlite3
 import pandas as pd
 
@@ -15,8 +15,7 @@ def query(sql, params=()):
 
 @app.route("/")
 def index():
-    df = query("SELECT * FROM forecast WHERE centre_id = 10")
-    return jsonify(df.to_dict(orient="records"))
+    return render_template("index.html")
 
 @app.route("/api/centres")
 def centres():
