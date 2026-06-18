@@ -13,7 +13,7 @@ def index():
     conn.close()
     return df.to_html(index=False)
 
-@app.route("/centres")
+@app.route("/api/centres")
 def centres():
     conn = sqlite3.connect(DB)
     df = pd.read_sql_query("SELECT centre_id, centre_type "
