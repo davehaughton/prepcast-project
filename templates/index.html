@@ -13,9 +13,9 @@
             <h1>PrepCast</h1> 
 
            <h3>Select centre</h3>
-           <select id="centre-picker">
-            
-           </select>
+           <select id="centre-picker"></select>
+
+           <div id="output-table"></div>
         </div>
         <script>
             async function loadCentres() {
@@ -25,7 +25,15 @@
                 .map(c => `<option value="${c.centre_id}">Centre ${c.centre_id}</option>`)
                 .join("");
             }
-            loadCentres();
+            async function loadForecast(centre_id) {
+                console.log(centre_id);
+            }
+            async function init() {
+                loadCentres();
+                const picker = document.getElementById("centre-picker");
+                picker.addEventListener("change", () => loadForecast(picker.value));
+            }
+            init();
         </script>
     </body>
 </html>
