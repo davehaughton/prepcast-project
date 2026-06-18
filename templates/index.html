@@ -9,6 +9,23 @@
 
     </head>
     <body class="bg-slate-100 text-slate-800 min-h-screen">
-        hello
+        <div class="max-w-6xl mx-auto p-6">
+            <h1>PrepCast</h1> 
+
+           <h3>Select centre</h3>
+           <select id="centre-picker">
+            
+           </select>
+        </div>
+        <script>
+            async function loadCentres() {
+                const res = await fetch("/api/centres");
+                const centres = await res.json();
+                document.getElementById("centre-picker").innerHTML = centres
+                .map(c => `<option value="${c.centre_id}">Centre ${c.centre_id}</option>`)
+                .join("");
+            }
+            loadCentres();
+        </script>
     </body>
 </html>
