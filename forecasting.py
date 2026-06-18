@@ -69,7 +69,7 @@ def predict_next_week(promo=None, service_level=None):     # to do : promo/servi
 
 # predict selected centre
 def forecast_centre(centre_id, promo=None, discount=0.0, service_level=None):
-    hist = load_data()
+    hist = load_data(centre_id)
     hist = hist[hist["centre_id"] == centre_id]
 
     last_week = hist["week"].max()
