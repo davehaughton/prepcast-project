@@ -8,12 +8,12 @@ def main():
 
     conn = sqlite3.connect(DB)
     conn.execute("DELETE FROM forecast")
-    conn.execute("ELETE FROM sqlite_sequence WHERE name = 'forecast")
+    conn.execute("DELETE FROM sqlite_sequence WHERE name = 'forecast'")
     df.to_sql("forecast", conn, if_exists="append", index=False)
     conn.commit()
 
     # check
-    print("rows:", conn.execute("SELECT COUNT(*) FROM forecast").fecthone()[0])
+    print("rows:", conn.execute("SELECT COUNT(*) FROM forecast").fetchone()[0])
 
     conn.close()
 
