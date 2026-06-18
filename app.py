@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request, render_template
 import sqlite3
 import pandas as pd
 
+import forecasting as fc
+
 app = Flask(__name__)
 DB = "prepcast.db"
 
@@ -26,15 +28,12 @@ def centres():
 @app.route("/api/forecast")
 def forecast():
     centre_id = request.args.get("centre_id", type=int)
-    df = query(
-        "SELECT f.meal_id, m.category, m.cuisine, "
-            "f.last_week_orders, f.predicted_demand, f.safety_stock, f.recommended_prep "
-            "FROM forecast f "
-            "JOIN meal m ON m.meal_id = f.meal_id "
-            "WHERE f.centre_id = ? "
-            "ORDER BY f.last_week_orders DESC", (centre_id,)
-        )
-    return jsonify(df.to_dict(orient="records"))
+    promo = request.args.get("promo", type=int) 
+    discount = request.args.get("discount", default=0.0, type=float)
+
+    rows = fc.forecast_centre(centre_id, promo=promo, discount=discount)
+    return jsonify(rows)
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5003)
