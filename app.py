@@ -13,6 +13,13 @@ def index():
     conn.close()
     return df.to_html(index=False)
 
+@app.route("/centres")
+def centres():
+    conn = sqlite3.connect(DB)
+    df = pd.read_sql_query("SELECT centre_id, centre_type"
+        "FROM centre ORDER BY centre_id", conn)
+    conn.close()
+    return df.to_html(index=False)
 
 if __name__ == "__main__":
     app.run(debug=True)
