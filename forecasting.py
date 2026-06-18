@@ -21,6 +21,8 @@ import numpy as np
 import pandas as pd
 import joblib
 from datetime import datetime
+from scipy.stats import norm
+
 
 
 from db import load_data
@@ -68,7 +70,7 @@ def predict_next_week(promo=None, service_level=None):     # to do : promo/servi
     return fut[cols]
 
 # predict selected centre
-def forecast_centre(centre_id, promo=None, discount=0.0, service_level=None):
+def forecast_centre(centre_id, promo=None, discount=0.0, service_level=0.60):
     hist = load_data(centre_id)
     hist = hist[hist["centre_id"] == centre_id]
 
@@ -96,6 +98,8 @@ def forecast_centre(centre_id, promo=None, discount=0.0, service_level=None):
     fut["predicted_demand"] = np.clip(model.predict(fut[feature_cols]), 0, None).round()
 
     # To do : real safety stock from formula
+    z = norm.ppf(service_level)
+    #print("z =", z) 
     fut["safety_stock"]     = 0
     fut["recommended_prep"] = fut["predicted_demand"] + fut["safety_stock"]
 
@@ -113,9 +117,14 @@ pd.set_option("display.max_columns", None)
 pd.set_option("display.width", None)
 
 if __name__ == "__main__":
-    df = predict_next_week()
+    # df = predict_next_week()
     #print(df.shape)
     #print(df.head())
-    print(forecast_centre(10)[:3])          # first 3 meals, no promo
-    print(forecast_centre(10, promo=1)[:3]) # same, promo ON
+    #print(forecast_centre(10)[:3])          # first 3 meals, no promo
+    #print(forecast_centre(10, promo=1)[:3]) # same, promo ON
+    #print(norm.ppf(0.60))
+    #forecast_centre(10, service_level=0.8)
+
+
+
 
