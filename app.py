@@ -8,7 +8,10 @@ DB = "prepcast.db"
 
 @app.route("/")
 def index():
-   return 'test'
+    conn = sqlite3.connect(DB)
+    df = pd.read_sql_query("SELECT * FROM forecast WHERE centre_id = 10", conn)
+    conn.close()
+    return df.to_html(index=False)
 
 
 if __name__ == "__main__":
