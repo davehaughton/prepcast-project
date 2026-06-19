@@ -30,8 +30,9 @@ def forecast():
     centre_id = request.args.get("centre_id", type=int)
     promo = request.args.get("promo", type=int) 
     discount = request.args.get("discount", default=0.0, type=float)
+    service_level = request.args.get("service_level", default=0.95, type=float)
 
-    rows = fc.forecast_centre(centre_id, promo=promo, discount=discount)
+    rows = fc.forecast_centre(centre_id, promo=promo, discount=discount, service_level=service_level)
     return jsonify(rows)
 
 

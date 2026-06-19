@@ -10,11 +10,11 @@
     </head>
     <body class="bg-slate-100 text-slate-800 min-h-screen">
         <div class="max-w-6xl mx-auto p-6">
-            <h1>PrepCast</h1> 
-            <div class="top_row flex gap-8 py-4 justify-between">
+            <h1 class="font-bold text-5xl">PrepCast</h1> 
+            <div class="top_row flex gap-8 py-4 justify-between items-center">
 
             <label>Select centre: 
-            <select id="centre-picker">
+            <select id="centre-picker" class="rounded-lg p-2 outline-none">
             </select>
             </label>
 
@@ -27,6 +27,11 @@
                 <label>Discount: 
                     <input type="range" id="discount" min="0" max="0.5" step="0.05" value="0">
                      <span id="discount-label">0%</span>
+                </label>
+
+                <label>Service level:
+                    <input type="range" id="service" min="0.5" max="0.99" step="0.01" value="0.95">
+                    <span id="service-label">95%</span>
                 </label>
             </div>
 
@@ -50,7 +55,7 @@
         <script>
 
             let currentRows = [];
-
+            // populate Centres dropdown
             async function loadCentres() {
                 const res = await fetch("/api/centres");
                 const centres = await res.json();
@@ -58,6 +63,7 @@
                 .map(c => `<option value="${c.centre_id}">Centre ${c.centre_id}</option>`)
                 .join("");
             }
+            // load forecast per Centre
             async function loadForecast() {
                 //console.log(centre_id);
                 
@@ -65,7 +71,8 @@
                 const centre_id = document.getElementById("centre-picker").value;
                 const promo = document.getElementById("promo").checked ? 1 : 0;
                 const discount = document.getElementById("discount").value;
-                const res = await fetch(`/api/forecast?centre_id=${centre_id}&promo=${promo}&discount=${discount}`);
+                const service = document.getElementById("service").value;
+                const res = await fetch(`/api/forecast?centre_id=${centre_id}&promo=${promo}&discount=${discount}&service_level=${service}`);
 
                 currentRows = await res.json();
                 renderForecast();
@@ -74,7 +81,7 @@
             function renderForecast() {
                 
                 const rowHtml = r => {
-                    const safety = 0; //todo
+                   const safety = r.safety_stock;
                     const rec    = r.predicted_demand + safety;
                     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
                     <td class="px-4 py-2">${r.category}</td>
@@ -94,6 +101,10 @@
                 document.getElementById("discount-label").textContent =
                     Math.round(discount.value * 100) + "%";
             });
+            service.addEventListener("input", () => {
+                document.getElementById("service-label").textContent =
+                    Math.round(service.value * 100) + "%";
+            });
 
 
             async function init() {
@@ -101,9 +112,11 @@
                 const picker = document.getElementById("centre-picker");
                 const promo = document.getElementById("promo");
                 const discount = document.getElementById("discount");
+                const service = document.getElementById("service");
                 picker.addEventListener("change", () => loadForecast());
                 promo.addEventListener("change", () => loadForecast());
                 discount.addEventListener("change", () => loadForecast());
+                service.addEventListener("change", () => loadForecast());
 
                 loadForecast();
             }

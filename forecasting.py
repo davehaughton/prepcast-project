@@ -70,7 +70,7 @@ def predict_next_week(promo=None, service_level=None):     # to do : promo/servi
     return fut[cols]
 
 # predict selected centre
-def forecast_centre(centre_id, promo=None, discount=0.0, service_level=0.60):
+def forecast_centre(centre_id, promo=None, discount=0.0, service_level=0.95):
     hist = load_data(centre_id)
     hist = hist[hist["centre_id"] == centre_id]
 
@@ -98,10 +98,37 @@ def forecast_centre(centre_id, promo=None, discount=0.0, service_level=0.60):
     fut["predicted_demand"] = np.clip(model.predict(fut[feature_cols]), 0, None).round()
 
     # To do : real safety stock from formula
+    
     z = norm.ppf(service_level)
     #print("z =", z) 
-    fut["safety_stock"]     = 0
+    # calculaing the standard deviation
+
+    # recent history, getting where the x values come from
+    hist_feat = feat[feat["week"] <= last_week].dropna(subset=DROP_NA)
+
+    # last 10 weeks for recent behaviour, getting n
+    recent = hist_feat[hist_feat["week"] > last_week - 10].copy()
+
+    # actual - predicted, getting the x values
+    recent["resid"] = recent["num_orders"] - model.predict(recent[feature_cols])
+
+    # standard deviation per centre/meal using .std()
+    resid_std = recent.groupby(["centre_id", "meal_id"])["resid"].std()
+
+    # attaching each meal's standard deviation onto the forecast rows
+    fut = fut.merge(resid_std.rename("resid_std"), on=["centre_id", "meal_id"], how="left")
+
+    # meals with too few weeks have no standard deviation -> no buffer
+    fut["resid_std"] = fut["resid_std"].fillna(0)
+
+    # safety stock = z × standard deviation
+    fut["safety_stock"] = (z * fut["resid_std"]).round()
+    
+    #fut["safety_stock"]     = 0
+    
     fut["recommended_prep"] = fut["predicted_demand"] + fut["safety_stock"]
+
+    print(fut[["meal_id","predicted_demand","resid_std","safety_stock"]].head())
 
     fut["last_week_orders"] = fut["lag_1"].round()
     fut["model_name"]       = model_name
@@ -117,13 +144,14 @@ pd.set_option("display.max_columns", None)
 pd.set_option("display.width", None)
 
 if __name__ == "__main__":
-    # df = predict_next_week()
+    #df = predict_next_week()
+     
     #print(df.shape)
     #print(df.head())
     #print(forecast_centre(10)[:3])          # first 3 meals, no promo
     #print(forecast_centre(10, promo=1)[:3]) # same, promo ON
     #print(norm.ppf(0.60))
-    #forecast_centre(10, service_level=0.8)
+    forecast_centre(10, service_level=0.95)
 
 
 
