@@ -30,8 +30,11 @@ def evaluateTrain(train,test,cats):
     X_train, y_train = train[feature_cols], train['num_orders']
     X_test,  y_test  = test[feature_cols],  test['num_orders']
 
-    model = RandomForestRegressor(n_estimators=100, max_depth=18,
-                              max_samples=0.5, n_jobs=-1, random_state=42)
+    model = RandomForestRegressor(
+    n_estimators=200, max_depth=18,
+    min_samples_leaf=5, max_features='sqrt',
+    max_samples=0.5, n_jobs=-1, random_state=42)
+
 
     def metrics(y_true, y_pred):
         return{
@@ -56,6 +59,7 @@ def evaluateTrain(train,test,cats):
         "features": feature_cols,
         "categories": cats,
         "metrics": results,
+        "model_name": "RandomForest",
     }
     joblib.dump(bundle, 'model.joblib')
 

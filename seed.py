@@ -32,6 +32,6 @@ demand = demand.rename(columns={'id': 'demand_id', 'center_id': 'centre_id'})
 demand.to_sql('demand_history', conn, if_exists='append', index=False)
 
 conn.commit()
-for t in ['centre', 'meal', 'demand_history', 'forecast', 'prep_plan']:
+for t in ['centre', 'meal', 'demand_history', 'prep_plan']:
     print(t, conn.execute(f'SELECT COUNT(*) FROM {t}').fetchone()[0])
 conn.close()
