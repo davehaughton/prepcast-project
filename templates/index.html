@@ -46,9 +46,19 @@
                         <th class="px-4 py-3 text-right">Forecast</th>
                         <th class="px-4 py-3 text-right">Buffer</th>
                         <th class="px-4 py-3 text-right">Recommended Prep</th>
+                        <th class="px-4 py-3 text-right">Planned Prep</th>
                     </tr>
                 </thead>
                 <tbody id="forecast-rows"></tbody>
+                <tfoot>
+                    <td colspan="6"></td>
+                    <td>
+                        <div class="flex ">
+                                <button id="save-plan" class="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700">Save plan</button>
+                        </div>
+                        
+                    </td>
+                </tfoot>
                 </table>
            </div>
         </div>
@@ -83,6 +93,7 @@
                 const rowHtml = r => {
                    const safety = r.safety_stock;
                     const rec    = r.predicted_demand + safety;
+                    const plan = rec;
                     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
                     <td class="px-4 py-2">${r.category}</td>
                     <td class="px-4 py-2">${r.cuisine}</td>
@@ -90,6 +101,7 @@
                     <td class="px-4 py-2 text-right">${r.predicted_demand}</td>
                     <td class="px-4 py-2 text-right">${safety}</td>
                     <td class="px-4 py-2 text-right">${rec}</td>
+                    <td class="px-4 py-2 text-right"><input type="text" class="border p-2" data-meal="${r.meal_id}" value="${plan}"></td>
                     </tr>`;
                 };
 

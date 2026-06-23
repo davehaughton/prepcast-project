@@ -36,6 +36,14 @@ def forecast():
     return jsonify(rows)
 
 
+@app.route("/api/plan", methods=["POST"])
+def save_plan()
+    data = request.get_json()
+    centre_id = data["centre_id"]
+    week = data["week"]
+    items = data["items"]
+    saved_at = datetime.now().isformat(timespec="seconds")
+
 if __name__ == "__main__":
     app.run(debug=True, port=5003)
 
