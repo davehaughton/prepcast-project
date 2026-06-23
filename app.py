@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, render_template
 import sqlite3
 import pandas as pd
+from datetime import datetime
 
 import forecasting as fc
 
@@ -42,9 +43,23 @@ def save_plan():
     centre_id = data["centre_id"]
     week = data["week"]
     items = data["items"]
-    saved_at = datetime.now().isformat(timespec="seconds")
+    saved_at = datetime.now().isoformat(timespec="seconds")
 
     conn = sqlite3.connect(DB)
+
+    # remove any existing plan from this row
+    conn.execute("DELETE FROM prep_plan WHERE centre_id = ? AND week = ?",
+                 (centre_id, week))
+    
+    # insert each row 
+    for it in items:
+        conn.execute(
+            "INSERT INTO prep_plan "
+            "(centre_id, meal_id, week, recommended_prep, planned_prep, status, saved_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (centre_id, it["meal_id"], week,
+             it["recommended_prep"], it["planned_prep"], "saved", saved_at))
+
 
     conn.commit()
     conn.close()
