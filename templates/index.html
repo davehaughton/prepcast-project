@@ -117,6 +117,10 @@
                 document.getElementById("service-label").textContent =
                     Math.round(service.value * 100) + "%";
             });
+            async function savePlan() {
+                //console.log('save plan button works');
+            }
+            document.getElementById("save-plan").addEventListener("click", () => savePlan());
 
 
             async function init() {
@@ -129,6 +133,7 @@
                 promo.addEventListener("change", () => loadForecast());
                 discount.addEventListener("change", () => loadForecast());
                 service.addEventListener("change", () => loadForecast());
+                
 
                 loadForecast();
             }
