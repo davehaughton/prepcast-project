@@ -119,6 +119,13 @@
             });
             async function savePlan() {
                 //console.log('save plan button works');
+                if (!currentRows.length) return;
+                const centre_id = Number(document.getElementById("centre-picker").value);
+                const week = currentRows[0].week;
+                //console.log(centre_id);
+                //console.log(week);
+
+
             }
             document.getElementById("save-plan").addEventListener("click", () => savePlan());
 
