@@ -124,6 +124,19 @@
                 const week = currentRows[0].week;
                 //console.log(centre_id);
                 //console.log(week);
+                const items = currentRows.map(r => {
+                    const input = document.querySelector(`#forecast-rows input[data-meal="${r.meal_id}"]`);
+                    return {
+                        meal_id: r.meal_id,
+                        recommended_prep: r.recommended_prep,
+                        planned_prep: Number(input.value)              
+                    };
+                });
+                const res = await fetch("/api/plan", {                             
+                    body: JSON.stringify({ centre_id, week, items })    
+                });
+                const result = await res.json();
+                alert(`Plan saved (${result.saved} rows)`);
 
 
             }
