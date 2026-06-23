@@ -93,15 +93,15 @@
                 const rowHtml = r => {
                    const safety = r.safety_stock;
                     const rec    = r.predicted_demand + safety;
-                    const plan = r.planned_prep;
+                    const plan = r.planned_prep ?? rec;
                     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
                     <td class="px-4 py-2">${r.category}</td>
                     <td class="px-4 py-2">${r.cuisine}</td>
                     <td class="px-4 py-2 text-right">${r.last_week_orders}</td>
                     <td class="px-4 py-2 text-right">${r.predicted_demand}</td>
                     <td class="px-4 py-2 text-right">${safety}</td>
-                    <td class="px-4 py-2 text-right">${plan}</td>
-                    <td class="px-4 py-2 text-right"><input type="text" class="border p-2" data-meal="${r.meal_id}" value="${plan}"></td>
+                    <td class="px-4 py-2 text-right">${rec}</td>
+                    <td class="px-4 py-2 text-right"><input type="text" class="border p-2 w-16" data-meal="${r.meal_id}" value="${plan}"></td>
                     </tr>`;
                 };
 
@@ -138,12 +138,11 @@
                     body: JSON.stringify({ centre_id, week, items })    
                 });
                 const result = await res.json();
-                alert(`Plan saved (${result.saved} rows)`);
+               // alert(`Plan saved (${result.saved} rows)`);
 
 
             }
-            document.getElementById("save-plan").addEventListener("click", () => savePlan());
-
+            
 
             async function init() {
                 await loadCentres();
@@ -155,7 +154,8 @@
                 promo.addEventListener("change", () => loadForecast());
                 discount.addEventListener("change", () => loadForecast());
                 service.addEventListener("change", () => loadForecast());
-                
+                document.getElementById("save-plan").addEventListener("click", () => savePlan());
+
 
                 loadForecast();
             }
