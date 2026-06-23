@@ -34,6 +34,17 @@ def forecast():
     service_level = request.args.get("service_level", default=0.95, type=float)
 
     rows = fc.forecast_centre(centre_id, promo=promo, discount=discount, service_level=service_level)
+   
+   # merge save plans
+    if rows:
+        week = rows[0]["week"]
+        saved = query(
+            "SELECT meal_id, planned_prep FROM prep_plan WHERE centre_id = ? AND week = ?",
+            (centre_id, week))
+        planned_by_meal = dict(zip(saved["meal_id"], saved["planned_prep"]))
+        for r in rows:
+            r["planned_prep"] = planned_by_meal.get(r["meal_id"], r["recommended_prep"])
+   
     return jsonify(rows)
 
 
