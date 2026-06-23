@@ -37,12 +37,18 @@ def forecast():
 
 
 @app.route("/api/plan", methods=["POST"])
-def save_plan()
+def save_plan():
     data = request.get_json()
     centre_id = data["centre_id"]
     week = data["week"]
     items = data["items"]
     saved_at = datetime.now().isformat(timespec="seconds")
+
+    conn = sqlite3.connect(DB)
+
+    conn.commit()
+    conn.close()
+    return jsonify({"status":"ok","saved":len(items)})
 
 if __name__ == "__main__":
     app.run(debug=True, port=5003)
