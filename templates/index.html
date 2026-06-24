@@ -12,11 +12,15 @@
         <div class="max-w-6xl mx-auto p-6">
             <h1 class="font-bold text-5xl">PrepCast</h1> 
             <div class="top_row flex gap-8 py-4 justify-between items-center">
+            <div class="flex items-center gap-4">
+                <span class="font-semibold">Centre {{ centre_id }}</span>
+                <a href="/logout" class="text-blue-600 underline">Logout</a>
+            </div>
 
-            <label>Select centre: 
+            <!-- <label>Select centre: 
             <select id="centre-picker" class="rounded-lg p-2 outline-none">
             </select>
-            </label>
+            </label> -->
 
 
             <div class="promo_discount flex gap-8 justify-between">
@@ -63,22 +67,23 @@
            </div>
         </div>
         <script>
-
+            const CENTRE_ID = "{{ centre_id }}";  
             let currentRows = [];
             // populate Centres dropdown
-            async function loadCentres() {
-                const res = await fetch("/api/centres");
-                const centres = await res.json();
-                document.getElementById("centre-picker").innerHTML = centres
-                .map(c => `<option value="${c.centre_id}">Centre ${c.centre_id}</option>`)
-                .join("");
-            }
+            // async function loadCentres() {
+            //     const res = await fetch("/api/centres");
+            //     const centres = await res.json();
+            //     document.getElementById("centre-picker").innerHTML = centres
+            //     .map(c => `<option value="${c.centre_id}">Centre ${c.centre_id}</option>`)
+            //     .join("");
+            // }
             // load forecast per Centre
             async function loadForecast() {
                 //console.log(centre_id);
                 
                 // const res = await fetch(`/api/forecast?centre_id=${centre_id}`);
-                const centre_id = document.getElementById("centre-picker").value;
+                const centre_id = CENTRE_ID;         
+                // const centre_id = document.getElementById("centre-picker").value;
                 const promo = document.getElementById("promo").checked ? 1 : 0;
                 const discount = document.getElementById("discount").value;
                 const service = document.getElementById("service").value;
@@ -120,7 +125,8 @@
             async function savePlan() {
                 //console.log('save plan button works');
                 if (!currentRows.length) return;
-                const centre_id = Number(document.getElementById("centre-picker").value);
+                // const centre_id = Number(document.getElementById("centre-picker").value);
+                const centre_id = Number(CENTRE_ID); 
                 const week = currentRows[0].week;
                 //console.log(centre_id);
                 //console.log(week);
@@ -145,16 +151,17 @@
             
 
             async function init() {
-                await loadCentres();
-                const picker = document.getElementById("centre-picker");
+                // await loadCentres();
+                // const picker = document.getElementById("centre-picker");
                 const promo = document.getElementById("promo");
                 const discount = document.getElementById("discount");
                 const service = document.getElementById("service");
-                picker.addEventListener("change", () => loadForecast());
+                // picker.addEventListener("change", () => loadForecast());
                 promo.addEventListener("change", () => loadForecast());
                 discount.addEventListener("change", () => loadForecast());
                 service.addEventListener("change", () => loadForecast());
                 document.getElementById("save-plan").addEventListener("click", () => savePlan());
+                
 
 
                 loadForecast();

@@ -37,9 +37,9 @@ def encode_categoricals(df, categories=None):
     df = df.copy()
     for col in CAT_COLS:
         if categories is not None:
-            df[col + '_code'] = pd.Categorical(df[col], categories=categories[col]).codes  # FIXED mapping
+            df[col + '_code'] = pd.Categorical(df[col], categories=categories[col]).codes 
         else:
-            df[col + '_code'] = df[col].astype('category').cat.codes                        # learn from data
+            df[col + '_code'] = df[col].astype('category').cat.codes                
     return df
 
 # the fixed category->code mapping 

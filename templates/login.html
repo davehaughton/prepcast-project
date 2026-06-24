@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>PrepCast — Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center">
+    <form method="POST" action="/login"
+          class="bg-white p-8 rounded-xl shadow w-80 flex flex-col gap-4">
+        <h1 class="font-bold text-3xl">PrepCast</h1>
+        <label class="text-sm">Select your centre:
+            <select name="centre_id" class="mt-1 w-full rounded-lg p-2 border">
+                {% for c in centres %}
+                <option value="{{ c.centre_id }}">Centre {{ c.centre_id }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <button type="submit" class="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700">
+            Continue
+        </button>
+    </form>
+</body>
+</html>

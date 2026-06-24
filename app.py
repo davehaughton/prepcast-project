@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, session, redirect, url_for
 import sqlite3
 import pandas as pd
 from datetime import datetime
@@ -14,11 +14,31 @@ def query(sql, params=()):
     conn.close()
     return df
 
+app.secret_key = "kf9$2mLpQ7zR1xV8wadhg3Nc0"
 
+# login form
+@app.route("/login") 
+def login():
+    centres = query("SELECT centre_id FROM centre ORDER BY centre_id").to_dict(orient="records")
+    return render_template("login.html", centres=centres)
+# process form
+@app.route("/login", methods=["POST"]) 
+def do_login():
+    session["centre_id"] = request.form["centre_id"]
+    return redirect(url_for("index"))
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    if "centre_id" not in session:
+        return redirect(url_for("login"))
+    return render_template("index.html", centre_id=session["centre_id"])
+
 
 @app.route("/api/centres")
 def centres():
