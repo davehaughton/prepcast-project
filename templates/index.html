@@ -3,170 +3,326 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PrepCast</title>
-
-        <script src="https://cdn.tailwindcss.com"></script>
+        <title>PrepCast — Demand Forecast</title>
+        <script>
+            if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+        </script>
+        <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+ 
+        <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}" />
+        <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
 
     </head>
-    <body class="bg-slate-100 text-slate-800 min-h-screen">
-        <div class="max-w-6xl mx-auto p-6">
-            <h1 class="font-bold text-5xl">PrepCast</h1> 
-            <div class="top_row flex gap-8 py-4 justify-between items-center">
-            <div class="flex items-center gap-4">
-                <span class="font-semibold">Centre {{ centre_id }}</span>
-                <a href="/logout" class="text-blue-600 underline">Logout</a>
-            </div>
+    <body data-centre-id="{{ centre_id }}" class="bg-canvas text-slate900">
+        <div class="flex items-start min-h-screen w-full">
 
-            <!-- <label>Select centre: 
-            <select id="centre-picker" class="rounded-lg p-2 outline-none">
-            </select>
-            </label> -->
+    <!-- Mobile backdrop -->
+    <div id="backdrop" class="fixed inset-0 z-30 bg-black/40 opacity-0 pointer-events-none transition-opacity lg:hidden"></div>
 
-
-            <div class="promo_discount flex gap-8 justify-between">
-                <label>Promotion: 
-                <input type="checkbox" id="promo">
-                </label>
-
-                <label>Discount: 
-                    <input type="range" id="discount" min="0" max="0.5" step="0.05" value="0">
-                     <span id="discount-label">0%</span>
-                </label>
-
-                <label>Service level:
-                    <input type="range" id="service" min="0.5" max="0.99" step="0.01" value="0.95">
-                    <span id="service-label">95%</span>
-                </label>
-            </div>
-
-           </div>
-           <div id="output-table" class="bg-white rounded-xl shadow overflow-x-auto">
-                <table class="w-full text-sm">
-                <thead class="bg-slate-800 text-white text-left">
-                    <tr>
-                        <th class="px-4 py-3">Category</th>
-                        <th class="px-4 py-3">Cuisine</th>
-                        <th class="px-4 py-3 text-right">Last week</th>
-                        <th class="px-4 py-3 text-right">Forecast</th>
-                        <th class="px-4 py-3 text-right">Buffer</th>
-                        <th class="px-4 py-3 text-right">Recommended Prep</th>
-                        <th class="px-4 py-3 text-right">Planned Prep</th>
-                    </tr>
-                </thead>
-                <tbody id="forecast-rows"></tbody>
-                <tfoot>
-                    <td colspan="6"></td>
-                    <td>
-                        <div class="flex ">
-                                <button id="save-plan" class="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700">Save plan</button>
-                        </div>
-                        
-                    </td>
-                </tfoot>
-                </table>
-           </div>
+    <!-- SIDEBAR  -->
+    <aside id="sidebar"
+      class="fixed lg:sticky top-0 z-40 flex flex-col h-screen w-[240px] shrink-0 bg-panel border-r border-line
+             -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out">
+      <!-- Logo -->
+      <div class="flex flex-col gap-1 px-6 pt-8 pb-6">
+        <div class="flex items-center justify-between">
+          <img src="{{ url_for('static', filename='logo.svg') }}" alt="PrepCast" class="h-9 w-auto max-w-[160px] dark:brightness-0 dark:invert" />
+          <button id="closeSidebar" class="lg:hidden text-slate500 hover:text-slate900 transition-colors" aria-label="Close menu">
+            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
-        <script>
-            const CENTRE_ID = "{{ centre_id }}";  
-            let currentRows = [];
-            // populate Centres dropdown
-            // async function loadCentres() {
-            //     const res = await fetch("/api/centres");
-            //     const centres = await res.json();
-            //     document.getElementById("centre-picker").innerHTML = centres
-            //     .map(c => `<option value="${c.centre_id}">Centre ${c.centre_id}</option>`)
-            //     .join("");
-            // }
-            // load forecast per Centre
-            async function loadForecast() {
-                //console.log(centre_id);
-                
-                // const res = await fetch(`/api/forecast?centre_id=${centre_id}`);
-                const centre_id = CENTRE_ID;         
-                // const centre_id = document.getElementById("centre-picker").value;
-                const promo = document.getElementById("promo").checked ? 1 : 0;
-                const discount = document.getElementById("discount").value;
-                const service = document.getElementById("service").value;
-                const res = await fetch(`/api/forecast?centre_id=${centre_id}&promo=${promo}&discount=${discount}&service_level=${service}`);
+        <p class="text-slate400 text-[11px]">Demand forecasting for food service</p>
+      </div>
+      <div class="h-px w-full bg-line"></div>
 
-                currentRows = await res.json();
-                renderForecast();
+      <!-- Location -->
+      <div class="p-3">
+        <button class="flex items-center gap-3 w-full bg-surface border border-line rounded-lg px-3 py-2.5 text-left transition-all hover:border-accent hover:shadow-xs focus:outline-hidden focus:ring-2 focus:ring-accent/40">
+          <svg class="size-4 text-slate500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span class="flex flex-col">
+            <span id="locTown" class="font-semibold text-[13px] text-slate900">Leixlip</span>
+            <span id="locCentre" class="font-mono text-[10px] text-slate900">CENTRE 12</span>
+          </span>
+        </button>
+      </div>
 
-            }
-            function renderForecast() {
-                
-                const rowHtml = r => {
-                   const safety = r.safety_stock;
-                    const rec    = r.predicted_demand + safety;
-                    const plan = r.planned_prep ?? rec;
-                    return `<tr class="border-t border-slate-100 hover:bg-slate-50">
-                    <td class="px-4 py-2">${r.category}</td>
-                    <td class="px-4 py-2">${r.cuisine}</td>
-                    <td class="px-4 py-2 text-right">${r.last_week_orders}</td>
-                    <td class="px-4 py-2 text-right">${r.predicted_demand}</td>
-                    <td class="px-4 py-2 text-right">${safety}</td>
-                    <td class="px-4 py-2 text-right">${rec}</td>
-                    <td class="px-4 py-2 text-right"><input type="text" class="border p-2 w-16" data-meal="${r.meal_id}" value="${plan}"></td>
-                    </tr>`;
-                };
+      <!-- Tabs -->
+      <nav class="flex flex-col gap-2 p-3">
+        <a href="#" aria-current="page" class="group flex items-center gap-3 h-10 bg-surface rounded-lg px-3 py-2 ring-1 ring-transparent hover:ring-accent/30 transition-all">
+          <span class="h-full w-1 rounded-xs bg-accent"></span>
+          <span class="font-mono font-semibold text-[12px] text-slate900">Forecast</span>
+        </a>
+        <a href="#" class="group flex items-center gap-3 h-10 rounded-lg px-3 py-2 transition-colors hover:bg-surface">
+          <span class="h-full w-1 rounded-xs bg-transparent group-hover:bg-line transition-colors"></span>
+          <span class="font-mono font-medium text-[12px] text-slate500 group-hover:text-slate900 transition-colors">Sales</span>
+        </a>
+      </nav>
+      <div class="h-px w-full bg-line"></div>
+      <!-- What-if / Scenario Mod -->
+      <div class="flex flex-col gap-5 p-6 bg-surface/50">
+        <div class="flex items-center gap-2 ">
+          <span class="size-2 rounded-sm bg-accent"></span>
+          <span class="font-bold text-[11px] uppercase tracking-wide text-slate500">Scenario Mod</span>
+        </div>
+        <div class="flex flex-col gap-3 ">
+          <div class="h-px w-full bg-line"></div>
+          <!-- Email promo toggle -->
+          <div class="flex items-center justify-between">
+            <span class="font-semibold text-[13px] text-slate900">Email Promo</span>
+            <button id="promoToggle" role="switch" aria-checked="false"
+              class="flex items-center w-9 h-5 p-0.5 rounded-full bg-line transition-colors duration-200 focus:outline-hidden focus:ring-2 focus:ring-accent/40">
+              <span class="size-4 rounded-lg bg-white shadow-[0_1px_2px_0_rgba(0,0,0,0.1)] transition-transform duration-200 translate-x-0"></span>
+            </button>
+          </div>
+          <div class="h-px w-full bg-line"></div>
+          <!-- Discount slider -->
+          <div class="flex flex-col gap-2 ">
+            <div class="flex items-center justify-between text-[12px]">
+              <span class="text-slate500">Discount</span>
+              <span id="discountVal" class="font-mono font-normal">0%</span>
+            </div>
+            <div class="relative h-3.5 flex items-center group">
+              <div class="absolute h-1 w-full rounded-xs bg-line"></div>
+              <div id="discountFill" class="absolute h-1 rounded-xs bg-accent" style="width:0%"></div>
+              <div id="discountHandle" class="absolute size-3.5 -translate-x-1/2 rounded-full bg-white border border-black transition-transform group-hover:scale-110" style="left:0%"></div>
+              <input id="discountRange" type="range" min="0" max="50" value="0" class="slider absolute inset-0 w-full h-full" aria-label="Discount" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="h-px w-full bg-line"></div>
+      <!-- spacer -->
+      <div class="flex-1"></div>
 
-                
-                document.getElementById("forecast-rows").innerHTML = currentRows.map(rowHtml).join("");
-            }
+      <!-- Log out -->
+      <a href="{{ url_for('login') }}" class="group flex items-center gap-3 px-6 py-5 m-1 rounded-lg transition-colors hover:bg-surface">
+        <svg class="size-4 text-slate500 group-hover:text-danger transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="text-[13px] text-slate500 group-hover:text-slate900 transition-colors">Log Out</span>
+      </a>
+    </aside>
 
-            discount.addEventListener("input", () => {
-                document.getElementById("discount-label").textContent =
-                    Math.round(discount.value * 100) + "%";
-            });
-            service.addEventListener("input", () => {
-                document.getElementById("service-label").textContent =
-                    Math.round(service.value * 100) + "%";
-            });
-            async function savePlan() {
-                //console.log('save plan button works');
-                if (!currentRows.length) return;
-                // const centre_id = Number(document.getElementById("centre-picker").value);
-                const centre_id = Number(CENTRE_ID); 
-                const week = currentRows[0].week;
-                //console.log(centre_id);
-                //console.log(week);
-                const items = currentRows.map(r => {
-                    const input = document.querySelector(`#forecast-rows input[data-meal="${r.meal_id}"]`);
-                    return {
-                        meal_id: r.meal_id,
-                        recommended_prep: r.recommended_prep,
-                        planned_prep: Number(input.value)              
-                    };
-                });
-                const res = await fetch("/api/plan", {    
-                    method: "POST",  
-                    headers: { "Content-Type": "application/json" },                           
-                    body: JSON.stringify({ centre_id, week, items })    
-                });
-                const result = await res.json();
-               // alert(`Plan saved (${result.saved} rows)`);
+    <!-- MAIN -->
+    <main class="flex flex-col flex-1 min-w-0 self-stretch">
+      <!-- Top bar -->
+      <header class="sticky top-0 z-20 flex items-center justify-between gap-3 h-20 px-4 sm:px-6 lg:px-8 bg-surface border-b border-line">
+        <div class="flex items-center gap-3 min-w-0">
+          <button id="openSidebar" class="lg:hidden shrink-0 text-slate500 hover:text-slate900 transition-colors" aria-label="Open menu">
+            <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="flex flex-col gap-1 min-w-0">
+            <h1 class="font-bold text-[18px] sm:text-[20px] text-slate900 truncate">Demand Forecast</h1>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-[13px] sm:text-[14px] text-accent">WEEK 146</span>
+              <span id="topLoc" class="hidden sm:inline text-[12px] text-slate400 truncate">• Leixlip Centre 12</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- Theme toggle -->
+          <button id="themeToggle" aria-label="Toggle dark mode"
+            class="flex items-center justify-center size-9 rounded-lg border border-line text-slate500 transition-colors hover:text-slate900 hover:bg-panel focus:outline-hidden focus:ring-2 focus:ring-accent/40">
+            <!-- sun (shown in dark mode → click for light) -->
+            <svg class="theme-sun hidden size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <!-- moon (shown in light mode → click for dark) -->
+            <svg class="theme-moon size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+          </button>
+          <button class="flex items-center gap-3 px-2 sm:px-2.5 py-2 rounded-lg transition-colors hover:bg-panel focus:outline-hidden focus:ring-2 focus:ring-accent/40">
+            <span class="flex items-center justify-center size-8 rounded-2xl bg-accent">
+              <span class="font-bold text-[13px] text-ink">F</span>
+            </span>
+            <span class="hidden sm:flex flex-col gap-0.5 text-left">
+              <span class="font-semibold text-[13px] text-slate900">FreshBowl Kitchens</span>
+              <span class="text-[11px] text-slate500">Enterprise</span>
+            </span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Page body -->
+      <div class="flex flex-col gap-6 lg:gap-8 p-4 sm:p-6 lg:p-8">
+
+        <!-- KPI row -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <!-- Portions to Prep -->
+          <div class="flex flex-col justify-between min-h-[180px] p-6 bg-surface border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[12px] uppercase text-slate500">Portions to Prep</span>
+                <button id="portionsChart" class="p-1 -m-1 rounded-sm text-slate400 transition-colors hover:text-accent hover:bg-accent/10 focus:outline-hidden focus:ring-2 focus:ring-accent/40" aria-label="View overall demand chart">
+                  <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                </button>
+              </div>
+              <p id="portionsTotal" class="font-mono font-semibold text-[36px] leading-none text-slate900"></p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              
+              <span class="text-[11px] text-slate600">Forecast + Safety buffer</span>
+            </div>
+          </div>
+
+          <!-- Growth Index -->
+          <div class="flex flex-col justify-between min-h-[180px] p-6 bg-surface border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[12px] uppercase text-slate500">Growth Index</span>
+                <svg class="size-4 text-slate400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+              <div class="flex items-center">
+                <svg id="growthArrow" class="size-6 text-accent transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+ <p id="growthIndex" class="font-mono font-semibold text-[36px] leading-none "></p>
+              </div>
+            </div>
+            <p class="text-[12px] text-slate600">vs last week</p>
+          </div>
+
+          <!-- Service Level -->
+          <div class="flex flex-col justify-between min-h-[180px] p-6 bg-surface border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[12px] uppercase text-slate500">Service Level</span>
+                <button id="adjustBtn" class="flex items-center h-7 px-2.5 py-1 rounded-md bg-panel border border-line font-medium text-[11px] text-slate600 transition-colors hover:bg-accent hover:text-ink hover:border-accent focus:outline-hidden focus:ring-2 focus:ring-accent/40">Adjust</button>
+              </div>
+              <p id="serviceVal" class="font-mono font-semibold text-[36px] leading-none text-slate900">95%</p>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <div class="h-1.5 w-full rounded-full bg-line">
+                <div id="serviceFill" class="h-1.5 rounded-full bg-accent transition-[width] duration-200" style="width:95%"></div>
+              </div>
+              <p id="serviceCaption" class="text-[11px] text-slate600">Target: 95% · Current: on track</p>
+            </div>
+          </div>
+
+          <!-- Active Period (dark) -->
+          <div class="flex flex-col justify-between min-h-[180px] p-6 bg-ink border border-accent rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[12px] uppercase text-slate400">Active Period</span>
+                <svg class="size-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <p class="font-mono font-semibold text-[36px] leading-none text-accent">WK146</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="size-2 rounded-full bg-accent animate-pulse"></span>
+              <span class="text-[11px] text-slate600">Forecast Active</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Table -->
+        <section class="w-full bg-surface border border-line rounded-xl shadow-[0_2px_8px_0_rgba(0,0,0,0.03)]">
+          <!-- Table header bar -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 bg-ink rounded-t-xl">
+            <div class="flex flex-col gap-1">
+              <h2 class="font-bold text-[16px] text-white">Meal Breakdown</h2>
+              <p class="text-[13px] text-slate400">Recommended prep values</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button class="px-4 py-2 rounded-lg bg-white/[0.07] border border-slate400 font-semibold text-[13px] text-slate400 transition-colors hover:bg-white/15 hover:text-white">Filter</button>
+              <button class="px-4 py-2 rounded-lg bg-accent font-bold text-[13px] text-ink transition-colors hover:bg-[#00b386] active:scale-95">Export CSV</button>
+            </div>
+          </div>
+
+          <!-- Column header pins under the top bar as the page scrolls -->
+          <div class="min-w-[920px]">
+              <!-- Column headings (sticky) -->
+              <div class="sticky top-20 z-10 flex items-center justify-between px-6 py-3 bg-ink border-b border-white/[0.07] shadow-[0_4px_8px_rgba(0,0,0,0.15)] font-bold text-[11px] uppercase text-slate400">
+                <span class="w-[200px]">Meal / SKU</span>
+                <span class="w-[120px]">Category</span>
+                <span class="w-[100px] text-right">LAST WEEK</span>
+                <span class="w-[140px] text-right">FORECAST</span>
+                <span class="w-[130px] text-right">SAFETY BUFFER</span>
+                <span class="w-[160px] flex justify-end">
+                  <span class="px-2 py-1 rounded-sm bg-accent/10 border border-accent text-accent text-[10px]">Recommended Prep</span>
+                </span>
+                <span class="w-[86px] text-right">PLAN</span>
+                <span class="w-10 text-center">CHART</span>
+              </div>
+
+              <!-- Rows -->
+              <div id="forecast-rows"></div>
+          </div>
+
+          <!-- Table footer -->
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-5 border-t border-line bg-surface rounded-b-xl">
+            <span id="record-count" class="text-[13px] text-slate500"></span>
+            <div class="flex items-center gap-6">
+              <button id="save-plan" class="px-4 py-2 rounded-lg bg-accent font-semibold text-[13px] text-ink transition-colors hover:bg-[#00b386] active:scale-95">Commit Plan</button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
 
 
-            }
-            
+  <!-- ADJUST SERVICE LEVEL MODAL -->
+  <div id="adjustModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <!-- modal backdrop -->
+    <div id="modalBackdrop" class="absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-200"></div>
+    <!-- modal card -->
+    <div id="modalCard" class="relative w-full max-w-[380px] bg-surface rounded-xl border border-line shadow-[0_20px_60px_rgba(0,0,0,0.25)] opacity-0 scale-95 transition-all duration-200">
+      <!-- header -->
+      <div class="flex items-start justify-between p-6 pb-4">
+        <div class="flex flex-col gap-1">
+          <h3 class="font-bold text-[16px] text-slate900">Adjust Service Level</h3>
+          <p class="text-[13px] text-slate500">Set the target fulfilment rate</p>
+        </div>
+        <button id="modalClose" class="text-slate400 hover:text-slate900 transition-colors" aria-label="Close">
+          <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <!-- body -->
+      <div class="flex flex-col gap-5 px-6 pb-2">
+        <div class="flex items-end justify-between">
+          <span class="text-[12px] uppercase font-semibold text-slate500">Service Level</span>
+          <span id="modalVal" class="font-mono font-semibold text-[32px] leading-none text-slate900">95%</span>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div class="relative h-3.5 flex items-center group">
+            <div class="absolute h-1.5 w-full rounded-full bg-line"></div>
+            <div id="modalFill" class="absolute h-1.5 rounded-full bg-accent" style="width:90%"></div>
+            <div id="modalHandle" class="absolute size-4 -translate-x-1/2 rounded-full bg-white border-2 border-accent shadow-xs transition-transform group-hover:scale-110" style="left:90%"></div>
+            <input id="serviceRange" type="range" min="50" max="100" value="95" class="slider absolute inset-0 w-full h-full" aria-label="Service level" />
+          </div>
+          <div class="flex justify-between font-mono text-[11px] text-slate400">
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      </div>
+      <!-- footer -->
+      <div class="flex items-center justify-end gap-3 p-6 pt-4">
+        <button id="modalCancel" class="px-4 py-2 rounded-lg border border-line font-semibold text-[13px] text-slate600 transition-colors hover:bg-panel">Cancel</button>
+        <button id="modalApply" class="px-4 py-2 rounded-lg bg-accent font-bold text-[13px] text-ink transition-colors hover:bg-[#00b386] active:scale-95">Apply</button>
+      </div>
+    </div>
+  </div>
 
-            async function init() {
-                // await loadCentres();
-                // const picker = document.getElementById("centre-picker");
-                const promo = document.getElementById("promo");
-                const discount = document.getElementById("discount");
-                const service = document.getElementById("service");
-                // picker.addEventListener("change", () => loadForecast());
-                promo.addEventListener("change", () => loadForecast());
-                discount.addEventListener("change", () => loadForecast());
-                service.addEventListener("change", () => loadForecast());
-                document.getElementById("save-plan").addEventListener("click", () => savePlan());
-                
+  <!-- ROW CHART MODAL -->
+  <div id="chartModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="chartBackdrop" class="absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-200"></div>
+    <div id="chartCard" class="relative w-full max-w-[760px] bg-surface rounded-xl border border-line shadow-[0_20px_60px_rgba(0,0,0,0.25)] opacity-0 scale-95 transition-all duration-200">
+      <div class="flex items-start justify-between p-6 pb-3">
+        <div class="flex flex-col gap-1">
+          <h3 id="chartTitle" class="font-bold text-[16px] text-slate900">Meal</h3>
+          <p id="chartSub" class="text-[13px] text-slate500">Weekly demand &amp; forecast</p>
+        </div>
+        <button id="chartClose" class="text-slate400 hover:text-slate900 transition-colors" aria-label="Close">
+          <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="chartStats" class="flex flex-wrap gap-2 px-6 pb-3"></div>
+      <div class="px-6 pb-6">
+        <div class="h-[420px]"><canvas id="rowChart"></canvas></div>
+      </div>
+    </div>
+  </div>
 
-
-                loadForecast();
-            }
-            init();
-        </script>
+      
+      
     </body>
 </html>
