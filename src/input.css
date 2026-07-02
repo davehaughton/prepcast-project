@@ -77,3 +77,33 @@ body { font-family: 'Geist', system-ui, sans-serif; }
 .slider { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
 .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; }
 .slider::-moz-range-thumb { width: 14px; height: 14px; border: 0; background: transparent; }
+
+
+@layer components {
+  
+  .todo {
+    position: relative;
+    cursor: help;
+    outline: 1px dashed rgb(var(--accent) / 0.5);  
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .todo::after {
+    content: attr(data-todo);        
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background: #0a0d14;
+    color: #fff;
+    font: 500 11px 'Geist', sans-serif;
+    padding: 4px 8px;
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 50;
+  }
+  .todo:hover::after { opacity: 1; }
+}

@@ -35,7 +35,6 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
                 const rowHtml = (r, i) => {
                     const safety = r.safety_stock;
                     const rec    = r.recommended_prep;
-                    const plan   = r.planned_prep ?? rec;
                     const fc     = r.predicted_demand;
                     const lweek  = r.last_week_orders;
                     const up     = fc >= lweek;
@@ -64,10 +63,7 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
                     <div class="w-[160px] flex justify-end">
                         <span class="font-mono font-bold text-[15px] text-accent">${rec}</span>
                     </div>
-                    <div class="w-[100px] flex justify-end">
-                        <input type="text" data-meal="${r.meal_id}" value="${plan}"
-                            class="w-[70px] text-right font-mono text-[13px] px-2 py-1 rounded-md border border-line bg-panel text-slate900 focus:outline-hidden focus:ring-2 focus:ring-accent/40">
-                    </div>
+                    <div class="plan-cell relative flex items-center justify-end w-[100px]" data-row="${i}"></div>
                     <div class="w-10 flex justify-center">
                 <button data-chart="${i}" class="vis-btn p-1 rounded-sm text-slate400 transition-colors hover:text-accent hover:bg-accent/10 group-hover:text-accent focus:outline-hidden focus:ring-2 focus:ring-accent/40" aria-label="View chart for ${r.category} #${r.meal_id}">${visIcon}</button>
                 </div>
@@ -79,6 +75,8 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
                 document.querySelectorAll('#forecast-rows [data-chart]').forEach(b =>
                     b.addEventListener('click', () => openChart(parseInt(b.dataset.chart, 10)))
                 );
+
+                renderPlanCells();
 
                 const totalPrep = currentRows.reduce((sum, r) => sum + r.recommended_prep, 0);
 
@@ -144,14 +142,11 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
                 const week = currentRows[0].week;
                 //console.log(centre_id);
                 //console.log(week);
-                const items = currentRows.map(r => {
-                    const input = document.querySelector(`#forecast-rows input[data-meal="${r.meal_id}"]`);
-                    return {
-                        meal_id: r.meal_id,
-                        recommended_prep: r.recommended_prep,
-                        planned_prep: Number(input.value)              
-                    };
-                });
+                const items = currentRows.map(r => ({
+                    meal_id: r.meal_id,
+                    recommended_prep: r.recommended_prep,
+                    planned_prep: Math.round(r.planned_prep ?? r.recommended_prep)
+                }));
                 const res = await fetch("/api/plan", {    
                     method: "POST",  
                     headers: { "Content-Type": "application/json" },                           
@@ -184,7 +179,7 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
 
 
 
-            // ---- Adjust Service Level modal ----
+            // Adjust Service Level modal 
             const modal        = document.getElementById('adjustModal');
             const modalCard    = document.getElementById('modalCard');
             const modalBd      = document.getElementById('modalBackdrop');
@@ -220,7 +215,7 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
             modalBd.addEventListener('click', closeModal);
             document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
 
-            // ---- Email promo toggle ----
+            // Email promo toggle 
             const toggle = document.getElementById('promoToggle');
             const knob = toggle.querySelector('span');
             toggle.addEventListener('click', () => {
@@ -233,7 +228,7 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
             loadForecast();                                  
             });
 
-            // ---- Discount slider ----
+            // Discount slider
             const range = document.getElementById('discountRange');
             const fill = document.getElementById('discountFill');
             const handle = document.getElementById('discountHandle');
@@ -248,7 +243,7 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
 
             range.addEventListener('change', () => loadForecast());   
 
-            // ---- Dark mode toggle ----
+            // Dark mode toggle 
             (() => {
             const root = document.documentElement;
             const btn  = document.getElementById('themeToggle');
@@ -362,7 +357,7 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
               document.getElementById('chartStats').innerHTML = d.stats;
 
               const labels  = weekLabels(d.week, d.hist.length);
-              const FC = d.hist.length;                  // forecast point index
+              const FC = d.hist.length;                 
               const line    = [...d.hist, d.fc];
               const recLine = labels.map(() => d.rec);
 
@@ -439,5 +434,94 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
             document.addEventListener('keydown', e => {
               if (e.key === 'Escape' && !chartModal.classList.contains('hidden')) closeChart();
             });
+
+            // plan cells
+            const planFmt = n => Number(n).toLocaleString('en-US');
+            const PLAN_PENCIL = '<svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+            const PLAN_RESET  = '<svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
+            const planContainer = document.getElementById('forecast-rows');
+            let planEditing = null;
+
+            // out-of-range band 
+            const planBounds = r => ({ mn: Math.round(r.predicted_demand), mx: Math.round(r.predicted_demand + r.safety_stock) });
+            const planCellOf = i => planContainer.querySelector(`.plan-cell[data-row="${i}"]`);
+            const planValue  = r => Math.round(r.planned_prep ?? r.recommended_prep);
+
+            function renderPlanDisplay(i) {
+              const cell = planCellOf(i); if (!cell) return;
+              const r = currentRows[i];
+              const plan = planValue(r), rec = Math.round(r.recommended_prep);
+              const { mn, mx } = planBounds(r);
+              const edited = plan !== rec;
+              const oob = edited && (plan < mn || plan > mx);  
+              const tone = oob
+                ? 'border-amber-400 bg-amber-400/10 text-amber-500'
+                : edited
+                  ? 'border-accent bg-accent/[0.07] text-slate900'
+                  : 'bg-panel border-line text-slate900 group-hover:border-accent group-hover:bg-surface';
+              cell.innerHTML = `
+                ${edited ? `<button class="plan-reset mr-1 text-slate400 hover:text-accent opacity-0 group-hover:opacity-100 transition-opacity" title="Reset to recommended (${planFmt(rec)})">${PLAN_RESET}</button>` : ''}
+                <button class="plan-display flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border font-mono text-[13px] transition-colors ${tone}"
+                        title="${oob ? 'Outside forecast range ' + mn + '–' + mx : 'Click to edit'}">
+                  <span>${planFmt(plan)}</span>
+                  ${edited
+                    ? '<span class="size-1.5 rounded-full bg-current shrink-0"></span>'
+                    : `<span class="text-slate400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">${PLAN_PENCIL}</span>`}
+                </button>`;
+            }
+
+            function renderPlanEdit(i) {
+              const cell = planCellOf(i); if (!cell) return;
+              const plan = planValue(currentRows[i]);
+              cell.innerHTML = `
+                <div class="plan-edit absolute right-0 top-1/2 -translate-y-1/2 z-20 flex items-center gap-0.5 rounded-md border border-accent bg-surface px-1 py-0.5 shadow-md ring-2 ring-accent/30">
+                  <button data-step="-1" class="plan-step flex items-center justify-center size-5 rounded-sm text-slate500 hover:bg-panel hover:text-slate900">−</button>
+                  <input type="number" class="plan-input w-[46px] text-center font-mono text-[13px] text-slate900 bg-transparent outline-hidden [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" value="${plan}" />
+                  <button data-step="1" class="plan-step flex items-center justify-center size-5 rounded-sm text-slate500 hover:bg-panel hover:text-slate900">+</button>
+                </div>`;
+              const input = cell.querySelector('.plan-input');
+              input.focus(); input.select();
+
+              let done = false;
+              const finish = (save, next) => {
+                if (done) return; done = true;
+                if (save) {
+                  let v = parseInt(input.value, 10);
+                  if (isNaN(v)) v = planValue(currentRows[i]);
+                  currentRows[i].planned_prep = Math.max(0, v);
+                }
+                planEditing = null;
+                renderPlanDisplay(i);
+                if (save && next && i + 1 < currentRows.length) enterPlanEdit(i + 1);
+              };
+              input.addEventListener('keydown', ev => {
+                if (ev.key === 'Enter') { ev.preventDefault(); finish(true, true); }
+                else if (ev.key === 'Escape') { ev.preventDefault(); finish(false, false); }
+              });
+              input.addEventListener('blur', () => setTimeout(() => finish(true, false), 80));
+            }
+
+            function enterPlanEdit(i) { planEditing = i; renderPlanEdit(i); }
+
+          
+            function renderPlanCells() { currentRows.forEach((_, i) => renderPlanDisplay(i)); }
+
+           
+            planContainer.addEventListener('mousedown', e => { if (e.target.closest('.plan-step')) e.preventDefault(); });
+
+            planContainer.addEventListener('click', e => {
+              const cell = e.target.closest('.plan-cell'); if (!cell) return;
+              const i = parseInt(cell.dataset.row, 10);
+              if (e.target.closest('.plan-reset')) { currentRows[i].planned_prep = Math.round(currentRows[i].recommended_prep); renderPlanDisplay(i); return; }
+              const step = e.target.closest('.plan-step');
+              if (step) {
+                const input = cell.querySelector('.plan-input');
+                input.value = Math.max(0, (parseInt(input.value, 10) || 0) + parseInt(step.dataset.step, 10));
+                input.focus();
+                return;
+              }
+              if (e.target.closest('.plan-display') && planEditing !== i) enterPlanEdit(i);
+            });
+
 
             init();
