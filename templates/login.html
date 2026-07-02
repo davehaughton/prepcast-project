@@ -12,7 +12,7 @@
         <label class="text-sm">Select your centre:
             <select name="centre_id" class="mt-1 w-full rounded-lg p-2 border">
                 {% for c in centres %}
-                <option value="{{ c.centre_id }}">Centre {{ c.centre_id }}</option>
+                <option value="{{ c.centre_id }}">{{ c.centre_name }} - Centre {{ c.centre_id }}</option>
                 {% endfor %}
             </select>
         </label>

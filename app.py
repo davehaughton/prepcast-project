@@ -19,7 +19,7 @@ app.secret_key = "kf9$2mLpQ7zR1xV8wadhg3Nc0"
 # login form
 @app.route("/login") 
 def login():
-    centres = query("SELECT centre_id FROM centre ORDER BY centre_id").to_dict(orient="records")
+    centres = query("SELECT centre_id, centre_name FROM centre ORDER BY centre_id").to_dict(orient="records")
     return render_template("login.html", centres=centres)
 # process form
 @app.route("/login", methods=["POST"]) 
@@ -37,7 +37,11 @@ def logout():
 def index():
     if "centre_id" not in session:
         return redirect(url_for("login"))
-    return render_template("index.html", centre_id=session["centre_id"])
+    row = query("SELECT centre_name FROM centre WHERE centre_id = ?", (session["centre_id"],))
+    centre_name = row["centre_name"][0]
+    return render_template("index.html", centre_id=session["centre_id"], centre_name=centre_name)
+
+   
 
 
 @app.route("/api/centres")

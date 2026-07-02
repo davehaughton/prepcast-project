@@ -40,11 +40,11 @@
 
       <!-- Location -->
       <div class="p-3">
-        <button class="flex items-center gap-3 w-full bg-surface border border-line rounded-lg px-3 py-2.5 text-left transition-all hover:border-accent hover:shadow-xs focus:outline-hidden focus:ring-2 focus:ring-accent/40">
-          <svg class="size-4 text-slate500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        <button class="flex items-start  gap-3 w-full bg-surface border border-line rounded-lg px-3 py-2.5 text-left transition-all hover:border-accent hover:shadow-xs focus:outline-hidden focus:ring-2 focus:ring-accent/40">
+          <svg class="size-4 text-slate500 mt-[8px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
           <span class="flex flex-col">
-            <span id="locTown" class="font-semibold text-[13px] text-slate900">Leixlip</span>
-            <span id="locCentre" class="font-mono text-[10px] text-slate900">CENTRE 12</span>
+            <span id="locTown" class="font-semibold text-2xl text-slate900">{{ centre_name }}</span>
+            <span id="locCentre" class="font-mono text-[13px] text-slate900">CENTRE {{ centre_id }}</span>
           </span>
         </button>
       </div>
@@ -112,13 +112,13 @@
           <button id="openSidebar" class="lg:hidden shrink-0 text-slate500 hover:text-slate900 transition-colors" aria-label="Open menu">
             <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
-          <div class="flex flex-col gap-1 min-w-0">
+          <!-- <div class="flex flex-col gap-1 min-w-0">
             <h1 class="font-bold text-[18px] sm:text-[20px] text-slate900 truncate">Demand Forecast</h1>
             <div class="flex items-center gap-2">
               <span class="font-mono text-[13px] sm:text-[14px] text-accent">WEEK 146</span>
               <span id="topLoc" class="hidden sm:inline text-[12px] text-slate400 truncate">• Leixlip Centre 12</span>
             </div>
-          </div>
+          </div> -->
         </div>
         <div class="flex items-center gap-2 shrink-0">
           <!-- Theme toggle -->
@@ -147,7 +147,7 @@
         <!-- KPI row -->
         <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <!-- Portions to Prep -->
-          <div class="flex flex-col justify-between min-h-[180px] p-6 bg-surface border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+          <div class="flex flex-col justify-between min-h-[180px] p-6  border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <span class="font-semibold text-[12px] uppercase text-slate500">Portions to Prep</span>
@@ -164,7 +164,7 @@
           </div>
 
           <!-- Growth Index -->
-          <div class="flex flex-col justify-between min-h-[180px] p-6 bg-surface border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+          <div class="flex flex-col justify-between min-h-[180px] p-6  border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <span class="font-semibold text-[12px] uppercase text-slate500">Growth Index</span>
@@ -172,14 +172,14 @@
               </div>
               <div class="flex items-center">
                 <svg id="growthArrow" class="size-6 text-accent transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
- <p id="growthIndex" class="font-mono font-semibold text-[36px] leading-none "></p>
+ <p id="growthIndex" class="font-mono font-semibold text-[36px] leading-none text-slate900"></p>
               </div>
             </div>
             <p class="text-[12px] text-slate600">vs last week</p>
           </div>
 
           <!-- Service Level -->
-          <div class="flex flex-col justify-between min-h-[180px] p-6 bg-surface border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+          <div class="flex flex-col justify-between min-h-[180px] p-6  border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <span class="font-semibold text-[12px] uppercase text-slate500">Service Level</span>
@@ -196,13 +196,13 @@
           </div>
 
           <!-- Active Period (dark) -->
-          <div class="flex flex-col justify-between min-h-[180px] p-6 bg-ink border border-accent rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+          <div class="flex flex-col justify-between min-h-[180px] p-6 border border-accent rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <span class="font-semibold text-[12px] uppercase text-slate400">Active Period</span>
                 <svg class="size-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               </div>
-              <p class="font-mono font-semibold text-[36px] leading-none text-accent">WK146</p>
+              <p class="font-mono font-semibold text-[36px] leading-none text-accent">WEEK 146</p>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="size-2 rounded-full bg-accent animate-pulse"></span>
