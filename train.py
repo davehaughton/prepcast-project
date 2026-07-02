@@ -1,7 +1,6 @@
 import pandas as pd
 import joblib
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 from features import build_features, learn_categories
