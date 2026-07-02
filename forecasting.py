@@ -101,9 +101,28 @@ def forecast_centre(centre_id, promo=None, discount=0.0, service_level=0.95):
     fut["model_name"]       = model_name
     fut["generated_at"]     = datetime.now().isoformat(timespec="seconds")
 
+    # cols = ["centre_id", "meal_id", "category", "cuisine", "week", "predicted_demand",
+    #     "safety_stock", "recommended_prep", "model_name", "generated_at", "last_week_orders"]
+    # return fut[cols].to_dict("records")
+
     cols = ["centre_id", "meal_id", "category", "cuisine", "week", "predicted_demand",
         "safety_stock", "recommended_prep", "model_name", "generated_at", "last_week_orders"]
-    return fut[cols].to_dict("records")
+
+    # ---- last N weeks of actual demand per meal (drives the row + overall charts) ----
+    HIST_WEEKS = 6
+    week_labels = list(range(int(last_week) - HIST_WEEKS + 1, int(last_week) + 1))
+    window = hist[hist["week"].isin(week_labels)]
+    orders_by_meal = {
+        mid: dict(zip(g["week"], g["num_orders"]))
+        for mid, g in window.groupby("meal_id")
+    }
+
+    records = fut[cols].to_dict("records")
+    for r in records:
+        wk = orders_by_meal.get(r["meal_id"], {})
+        r["history"] = [int(wk[w]) if w in wk else None for w in week_labels]
+    return records
+
 
 
 
