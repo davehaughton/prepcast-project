@@ -47,10 +47,10 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
 
                     return `
                     <div class="group flex items-center justify-between px-6 py-4 ${i % 2 ? 'bg-canvas' : 'bg-surface'} border-l-2 border-transparent transition-colors hover:bg-accent/6 hover:border-accent">
-                    <div class="flex items-center gap-2 w-[200px]">
-                        <span class="font-semibold text-[14px] text-slate900">${r.category}</span>
+                    <button data-chart="${i}" class="flex items-center gap-2 w-[200px] text-left cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-accent/40 rounded-sm" aria-label="View chart for ${r.category} #${r.meal_id}">
+                        <span class="font-semibold text-[14px] text-slate900 group-hover:text-accent transition-colors">${r.category}</span>
                         <span class="font-mono text-[11px] text-slate600">#${r.meal_id}</span>
-                    </div>
+                    </button>
                     <span class="w-[120px] text-[13px] text-slate500">${r.cuisine}</span>
                     <span class="w-[100px] text-right font-mono text-[14px] text-slate900">${lweek}</span>
                     <div class="w-[140px] flex flex-col items-end gap-0.5">
@@ -69,13 +69,17 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
                             class="w-[70px] text-right font-mono text-[13px] px-2 py-1 rounded-md border border-line bg-panel text-slate900 focus:outline-hidden focus:ring-2 focus:ring-accent/40">
                     </div>
                     <div class="w-10 flex justify-center">
-                <button data-chart="" class="vis-btn p-1 rounded-sm text-slate400 transition-colors hover:text-accent hover:bg-accent/10 group-hover:text-accent focus:outline-hidden focus:ring-2 focus:ring-accent/40" aria-label="View chart for ">${visIcon}</button>
+                <button data-chart="${i}" class="vis-btn p-1 rounded-sm text-slate400 transition-colors hover:text-accent hover:bg-accent/10 group-hover:text-accent focus:outline-hidden focus:ring-2 focus:ring-accent/40" aria-label="View chart for ${r.category} #${r.meal_id}">${visIcon}</button>
                 </div>
                     </div>`;
                 };
 
                 document.getElementById("forecast-rows").innerHTML = currentRows.map(rowHtml).join("");
-                
+
+                document.querySelectorAll('#forecast-rows [data-chart]').forEach(b =>
+                    b.addEventListener('click', () => openChart(parseInt(b.dataset.chart, 10)))
+                );
+
                 const totalPrep = currentRows.reduce((sum, r) => sum + r.recommended_prep, 0);
 
                 document.getElementById("portionsTotal").textContent = Math.round(totalPrep).toLocaleString("en-US");
@@ -260,9 +264,180 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
                 root.classList.toggle('dark');
                 localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
                 sync();
+                if (rowChart && !chartModal.classList.contains('hidden')) rowChart.__rerender();
             });
             })();
 
 
+
+            // Charts
+            let rowChart = null;
+
+            const crosshair = {
+              id: 'crosshair',
+              afterDraw(chart) {
+                const active = chart.getActiveElements();
+                if (!active.length) return;
+                const x = active[0].element.x;
+                const { top, bottom } = chart.chartArea;
+                const ctx = chart.ctx;
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(x, top); ctx.lineTo(x, bottom);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = document.documentElement.classList.contains('dark') ? 'rgba(241,245,249,0.18)' : 'rgba(15,23,42,0.15)';
+                ctx.stroke(); ctx.restore();
+              },
+            };
+
+            const chip = (label, val, accent) => `
+              <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-panel border border-line">
+                <span class="text-[10px] uppercase font-semibold text-slate500">${label}</span>
+                <span class="font-mono font-bold text-[12px] ${accent ? 'text-accent' : 'text-slate900'}">${typeof val === 'number' ? val.toLocaleString() : val}</span>
+              </span>`;
+
+            const chartTheme = () => {
+              const dark = document.documentElement.classList.contains('dark');
+              return {
+                accent: dark ? '#00d4aa' : '#00c896',
+                fill:   dark ? 'rgba(0,212,170,0.10)' : 'rgba(0,200,150,0.08)',
+                fcDot:  '#0a0d14',
+                rec:    dark ? '#475569' : '#94a3b8',
+                grid:   dark ? 'rgba(148,163,184,0.14)' : '#f1f5f9',
+                tick:   '#94a3b8',
+                legend: dark ? '#94a3b8' : '#475569',
+                tooltip:'#0a0d14',
+              };
+            };
+
+            // x-axis labels 
+            const weekLabels = (fcWeek, n) => {
+              const out = [];
+              for (let i = n; i >= 1; i--) out.push('W' + (fcWeek - i));
+              out.push('W' + fcWeek);
+              return out;
+            };
+
+            // One meal 
+            function openChart(i) {
+              const r = currentRows[i];
+              renderChart({
+                title: `${r.category} #${r.meal_id}`,
+                sub:   `${r.cuisine} · weekly demand & forecast`,
+                stats: chip('Last Week', Math.round(r.last_week_orders)) + chip('Forecast', Math.round(r.predicted_demand), true) + chip('Rec Prep', Math.round(r.recommended_prep)),
+                hist:  (r.history || []).map(v => v ?? null),
+                fc: Math.round(r.predicted_demand), rec: Math.round(r.recommended_prep), week: r.week,
+                rerender: () => openChart(i),
+              });
+            }
+
+            // All meals → summed weekly series
+            function openOverallChart() {
+              const n = currentRows.length ? (currentRows[0].history || []).length : 0;
+              const hist = new Array(n).fill(0);
+              let last = 0, fc = 0, rec = 0;
+              currentRows.forEach(r => {
+                (r.history || []).forEach((v, i) => { hist[i] += (v || 0); });
+                last += Math.round(r.last_week_orders);
+                fc   += Math.round(r.predicted_demand);
+                rec  += Math.round(r.recommended_prep);
+              });
+              renderChart({
+                title: 'Portions to Prep',
+                sub:   `All ${currentRows.length} meals · total weekly demand & forecast`,
+                stats: chip('Last Week', last) + chip('Forecast', fc, true) + chip('Rec Prep', rec) + chip('SKUs', currentRows.length),
+                hist, fc, rec, week: currentRows[0]?.week,
+                rerender: openOverallChart,
+              });
+            }
+
+            const chartModal = document.getElementById('chartModal');
+            const chartCard  = document.getElementById('chartCard');
+            const chartBd    = document.getElementById('chartBackdrop');
+
+            function renderChart(d) {
+              const C = chartTheme();
+              document.getElementById('chartTitle').textContent = d.title;
+              document.getElementById('chartSub').textContent = d.sub;
+              document.getElementById('chartStats').innerHTML = d.stats;
+
+              const labels  = weekLabels(d.week, d.hist.length);
+              const FC = d.hist.length;                  // forecast point index
+              const line    = [...d.hist, d.fc];
+              const recLine = labels.map(() => d.rec);
+
+              chartModal.classList.remove('hidden');
+              chartModal.classList.add('flex');
+              requestAnimationFrame(() => {
+                chartBd.classList.remove('opacity-0');
+                chartCard.classList.remove('opacity-0', 'scale-95');
+              });
+
+              if (rowChart) rowChart.destroy();
+              rowChart = new Chart(document.getElementById('rowChart'), {
+                type: 'line',
+                plugins: [crosshair],
+                data: {
+                  labels,
+                  datasets: [
+                    { label: 'Demand', data: line, borderColor: C.accent, backgroundColor: C.fill,
+                      fill: true, tension: 0.35, borderWidth: 2, spanGaps: true,
+                      pointRadius:          ctx => ctx.dataIndex === FC ? 5 : 3,
+                      pointStyle:           ctx => ctx.dataIndex === FC ? 'rectRot' : 'circle',
+                      pointBackgroundColor: ctx => ctx.dataIndex === FC ? C.fcDot : C.accent,
+                      pointBorderColor: C.accent,
+                      segment: { borderDash: ctx => ctx.p1DataIndex === FC ? [5, 4] : undefined } },
+                    { label: 'Rec Prep', data: recLine, borderColor: C.rec, borderDash: [3, 3],
+                      borderWidth: 1.5, pointRadius: 0, fill: false },
+                  ],
+                },
+                options: {
+                  responsive: true, maintainAspectRatio: false,
+                  interaction: { mode: 'index', intersect: false },
+                  plugins: {
+                    legend: {
+                      position: 'top', onClick: () => {},
+                      labels: {
+                        usePointStyle: true, boxWidth: 8, padding: 16, color: C.legend, font: { family: 'Geist', size: 12 },
+                        generateLabels: () => [
+                          { text: 'Demand',   fillStyle: C.accent, strokeStyle: C.accent, pointStyle: 'circle',  lineWidth: 0 },
+                          { text: 'Forecast', fillStyle: C.fcDot,  strokeStyle: C.accent, pointStyle: 'rectRot', lineWidth: 1 },
+                          { text: 'Rec Prep', fillStyle: C.rec,    strokeStyle: C.rec,    pointStyle: 'line',    lineWidth: 1 },
+                        ],
+                      },
+                    },
+                    tooltip: {
+                      backgroundColor: C.tooltip, padding: 10, cornerRadius: 8,
+                      titleFont: { family: 'Geist' }, bodyFont: { family: 'IBM Plex Mono' },
+                      filter: item => item.datasetIndex === 1 ? item.dataIndex === FC : true,
+                      callbacks: {
+                        title: items => items[0].label,
+                        label: item => item.datasetIndex === 1
+                          ? `Rec Prep: ${item.formattedValue}`
+                          : `${item.dataIndex === FC ? 'Forecast' : 'Demand'}: ${item.formattedValue}`,
+                      },
+                    },
+                  },
+                  scales: {
+                    x: { grid: { display: false }, ticks: { color: C.tick, font: { family: 'IBM Plex Mono', size: 11 } } },
+                    y: { grid: { color: C.grid }, ticks: { color: C.tick, font: { family: 'IBM Plex Mono', size: 11 } } },
+                  },
+                },
+              });
+              rowChart.__rerender = d.rerender;
+            }
+
+            function closeChart() {
+              chartBd.classList.add('opacity-0');
+              chartCard.classList.add('opacity-0', 'scale-95');
+              setTimeout(() => { chartModal.classList.add('hidden'); chartModal.classList.remove('flex'); }, 200);
+            }
+
+            document.getElementById('chartClose').addEventListener('click', closeChart);
+            document.getElementById('portionsChart').addEventListener('click', openOverallChart);
+            chartBd.addEventListener('click', closeChart);
+            document.addEventListener('keydown', e => {
+              if (e.key === 'Escape' && !chartModal.classList.contains('hidden')) closeChart();
+            });
 
             init();
