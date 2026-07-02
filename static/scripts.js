@@ -22,8 +22,14 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
                 const discount = document.getElementById("discountRange").value / 100; 
 
                 //const service = document.getElementById("service").value;
-                const service = Math.min(committed, 99) / 100; 
+                const service = Math.min(committed, 99) / 100;
 
+                // show spinner while the model calculates
+                document.getElementById("forecast-rows").innerHTML = `
+                    <div class="flex items-center justify-center gap-3 py-16 text-slate500">
+                        <span class="size-5 rounded-full border-2 border-line border-t-accent animate-spin"></span>
+                        <span class="font-mono text-[13px]">Calculating forecast…</span>
+                    </div>`;
 
                 const res = await fetch(`/api/forecast?centre_id=${centre_id}&promo=${promo}&discount=${discount}&service_level=${service}`);
 
