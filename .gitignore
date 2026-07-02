@@ -1,5 +1,7 @@
 prepcast.db
 model.joblib
+model.joblib.bak
+*.bak
 categories.joblib
 __pycache__
 __pycache__/*
