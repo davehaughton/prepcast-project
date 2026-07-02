@@ -24,7 +24,7 @@ def split(df):
 
 # evaluate and train model
 def evaluateTrain(train,test,cats):
-    drop_cols = ['num_orders', 'category', 'cuisine', 'centre_type']
+    drop_cols = ['num_orders', 'category', 'cuisine', 'centre_type', 'week']
     feature_cols = [c for c in train.columns if c not in drop_cols]
     X_train, y_train = train[feature_cols], train['num_orders']
     X_test,  y_test  = test[feature_cols],  test['num_orders']

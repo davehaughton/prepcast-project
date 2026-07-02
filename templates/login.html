@@ -3,22 +3,53 @@
 <head>
     <meta charset="UTF-8" />
     <title>PrepCast — Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+     <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}" />
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center">
-    <form method="POST" action="/login"
-          class="bg-white p-8 rounded-xl shadow w-80 flex flex-col gap-4">
-        <h1 class="font-bold text-3xl">PrepCast</h1>
-        <label class="text-sm">Select your centre:
-            <select name="centre_id" class="mt-1 w-full rounded-lg p-2 border">
+<body class="bg-canvas text-slate900 min-h-screen flex flex-col items-center justify-center p-4">
+    
+    <div class="flex flex-col items-center gap-1 mb-8">
+      <img src="{{ url_for('static', filename='logo.svg') }}" alt="PrepCast" class="h-10 w-auto" />
+      <p class="font-mono text-[11px] uppercase tracking-wide text-accent">Demand Forecasting</p>
+    </div>
+
+    <!-- Card -->
+    <form method="POST" action="/login" id="loginForm" class="flex flex-col gap-5 p-6 sm:p-8 bg-white border border-line rounded-xl shadow-[0_2px_8px_0_rgba(0,0,0,0.03)]">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center justify-center size-10 rounded-xl bg-accent shrink-0">
+          <span class="font-bold text-[18px] text-ink">F</span>
+        </div>
+        <div class="flex flex-col">
+          <h2 class="font-bold text-[16px] text-slate900">FreshBowl Kitchens</h2>
+          <p class="text-[12px] text-slate500">Enterprise workspace</p>
+        </div>
+      </div>
+      <div class="h-px w-full bg-line"></div>
+
+      <!-- Location dropdown -->
+      <div class="flex flex-col gap-2">
+        <label for="location" class="font-semibold text-[12px] uppercase text-slate500">Town · Centre</label>
+        <div class="relative">
+          <!-- pin icon -->
+          <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          
+           <select id="location" name="centre_id"
+            class="field appearance-none w-full h-12 pl-10 pr-10 rounded-lg bg-white border border-line font-medium text-[14px] text-slate900 cursor-pointer transition-colors hover:border-accent focus:outline-hidden focus:border-accent focus:ring-2 focus:ring-accent/30">
+          
                 {% for c in centres %}
                 <option value="{{ c.centre_id }}">{{ c.centre_name }} - Centre {{ c.centre_id }}</option>
                 {% endfor %}
             </select>
-        </label>
-        <button type="submit" class="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700">
-            Continue
-        </button>
+          <!-- chevron -->
+          <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 text-slate400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+
+      <!-- Login button -->
+      <button type="submit"
+        class="flex items-center justify-center gap-2 h-12 rounded-lg bg-accent font-bold text-[14px] text-ink transition-colors hover:bg-[#00b386] active:scale-[0.98] focus:outline-hidden focus:ring-2 focus:ring-accent/40">
+        Log In
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
     </form>
 </body>
 </html>
