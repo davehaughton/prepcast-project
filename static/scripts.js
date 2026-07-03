@@ -246,7 +246,22 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
             modalBd.addEventListener('click', closeModal);
             document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
 
-            // Email promo toggle 
+            // Mobile sidebar (slide-in nav)
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('backdrop');
+            const openSidebar = () => {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('opacity-0', 'pointer-events-none');
+            };
+            const closeSidebar = () => {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('opacity-0', 'pointer-events-none');
+            };
+            document.getElementById('openSidebar').addEventListener('click', openSidebar);
+            document.getElementById('closeSidebar').addEventListener('click', closeSidebar);
+            backdrop.addEventListener('click', closeSidebar);
+
+            // Email promo toggle
             const toggle = document.getElementById('promoToggle');
             const knob = toggle.querySelector('span');
             toggle.addEventListener('click', () => {
