@@ -24,18 +24,44 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
                 //const service = document.getElementById("service").value;
                 const service = Math.min(committed, 99) / 100;
 
-                // show spinner while the model calculates
-                document.getElementById("forecast-rows").innerHTML = `
-                    <div class="flex items-center justify-center gap-3 py-16 text-slate500">
-                        <span class="size-5 rounded-full border-2 border-line border-t-accent animate-spin"></span>
-                        <span class="font-mono text-[13px]">Calculating forecast…</span>
-                    </div>`;
+                showLoading();   // dim current figures + float a spinner over them
 
                 const res = await fetch(`/api/forecast?centre_id=${centre_id}&promo=${promo}&discount=${discount}&service_level=${service}`);
 
                 currentRows = await res.json();
                 renderForecast();
+                hideLoading();
 
+            }
+
+            // loading overlay: keep the current table visible but dimmed, spinner on top (no layout shift)
+            function showLoading() {
+                const rows = document.getElementById("forecast-rows");
+                rows.style.transition = "opacity 0.15s";
+                rows.style.opacity = "0.35";
+                rows.style.pointerEvents = "none";
+                let ov = document.getElementById("forecast-loading");
+                if (!ov) {
+                    rows.parentElement.style.position = "relative";
+                    ov = document.createElement("div");
+                    ov.id = "forecast-loading";
+                    ov.className = "absolute inset-0 flex items-start justify-center pt-24 pointer-events-none";
+                    ov.innerHTML = `
+                        <span class="flex items-center gap-3 px-4 py-2 rounded-lg bg-surface/90 border border-line shadow-sm">
+                            <span class="size-5 rounded-full border-2 border-line border-t-accent animate-spin"></span>
+                            <span class="font-mono text-[13px] text-slate500">Calculating…</span>
+                        </span>`;
+                    rows.parentElement.appendChild(ov);
+                }
+                ov.style.display = "flex";
+            }
+
+            function hideLoading() {
+                const rows = document.getElementById("forecast-rows");
+                rows.style.opacity = "";
+                rows.style.pointerEvents = "";
+                const ov = document.getElementById("forecast-loading");
+                if (ov) ov.style.display = "none";
             }
             function renderForecast() {
                 const rowHtml = (r, i) => {
