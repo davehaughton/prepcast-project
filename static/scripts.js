@@ -233,8 +233,7 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
             committed = parseInt(serviceRange.value, 10);
             serviceVal.textContent = committed + '%';
             serviceFill.style.width = committed + '%';
-            const status = committed >= 95 ? 'on track' : committed >= 80 ? 'monitor' : 'at risk';
-            serviceCaption.textContent = `Target: ${committed}% · Current: ${status}`;
+            serviceCaption.textContent = `Target service level: ${committed}%`;
             closeModal();
             loadForecast();                                 
             };
