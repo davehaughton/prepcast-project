@@ -176,6 +176,8 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
                 //console.log(week);
                 const items = currentRows.map(r => ({
                     meal_id: r.meal_id,
+                    predicted_demand: r.predicted_demand,
+                    safety_stock: r.safety_stock,
                     recommended_prep: r.recommended_prep,
                     planned_prep: Math.round(r.planned_prep ?? r.recommended_prep)
                 }));

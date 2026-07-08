@@ -90,9 +90,11 @@ def save_plan():
     for it in items:
         conn.execute(
             "INSERT INTO prep_plan "
-            "(centre_id, meal_id, week, recommended_prep, planned_prep, status, saved_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "(centre_id, meal_id, week, predicted_demand, safety_stock, "
+            "recommended_prep, planned_prep, status, saved_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (centre_id, it["meal_id"], week,
+             it["predicted_demand"], it["safety_stock"],
              it["recommended_prep"], it["planned_prep"], "saved", saved_at))
 
 
