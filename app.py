@@ -102,6 +102,84 @@ def save_plan():
     conn.close()
     return jsonify({"status":"ok","saved":len(items)})
 
+
+# read the committed plan for the current (not-yet-closed) week
+@app.route("/api/actuals")
+def get_actuals():
+    centre_id = request.args.get("centre_id", type=int)
+
+    # current week = the week we are forecasting = last actual week + 1
+    wk = query("SELECT MAX(week) AS m FROM demand_history WHERE centre_id = ?",
+               (centre_id,))
+    last_week = int(wk["m"][0])
+    week = last_week + 1
+
+    rows = query(
+        "SELECT p.meal_id, m.category, m.cuisine, "
+        "p.predicted_demand, p.safety_stock, p.recommended_prep, "
+        "p.planned_prep, p.actual_sales "
+        "FROM prep_plan p JOIN meal m ON m.meal_id = p.meal_id "
+        "WHERE p.centre_id = ? AND p.week = ? "
+        "ORDER BY p.meal_id",
+        (centre_id, week))
+
+    items = rows.to_dict(orient="records")
+    # states: no committed plan, open for entry, or already closed
+    if not items:
+        state = "no_plan"
+    elif all(it["actual_sales"] is not None for it in items):
+        state = "closed"
+    else:
+        state = "open"
+
+    return jsonify({"centre_id": centre_id, "week": week,
+                    "state": state, "items": items})
+
+
+# save actual sales: write history (rolls the week) + record on the plan
+@app.route("/api/actuals", methods=["POST"])
+def save_actuals():
+    data = request.get_json()
+    centre_id = data["centre_id"]
+    week = data["week"]
+    items = data["items"]       
+
+    conn = sqlite3.connect(DB)
+    try:
+        for it in items:
+            # carry forward this meal's most recent price/promo values
+            prev = conn.execute(
+                "SELECT checkout_price, base_price, emailer_for_promotion, homepage_featured "
+                "FROM demand_history WHERE centre_id = ? AND meal_id = ? AND week < ? "
+                "ORDER BY week DESC LIMIT 1",
+                (centre_id, it["meal_id"], week)).fetchone()
+            checkout_price, base_price, promo, featured = prev if prev else (None, None, 0, 0)
+
+            # actual sales become a real demand_history row -> MAX(week) advances
+            conn.execute(
+                "INSERT INTO demand_history "
+                "(centre_id, meal_id, week, num_orders, checkout_price, base_price, "
+                "emailer_for_promotion, homepage_featured) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (centre_id, it["meal_id"], week, it["actual_sales"],
+                 checkout_price, base_price, promo, featured))
+
+            # record the actual against the plan for plan-vs-actual comparison
+            conn.execute(
+                "UPDATE prep_plan SET actual_sales = ? "
+                "WHERE centre_id = ? AND meal_id = ? AND week = ?",
+                (it["actual_sales"], centre_id, it["meal_id"], week))
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+    conn.close()
+    return jsonify({"status": "ok", "saved": len(items), "next_week": week + 1})
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5003)
 
