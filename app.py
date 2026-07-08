@@ -44,6 +44,15 @@ def index():
    
 
 
+@app.route("/sales")
+def sales():
+    if "centre_id" not in session:
+        return redirect(url_for("login"))
+    row = query("SELECT centre_name FROM centre WHERE centre_id = ?", (session["centre_id"],))
+    centre_name = row["centre_name"][0]
+    return render_template("sales.html", centre_id=session["centre_id"], centre_name=centre_name)
+
+
 @app.route("/api/centres")
 def centres():
     df = query("SELECT centre_id, centre_type "
