@@ -133,6 +133,8 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
 
                 document.getElementById("record-count").textContent = `${currentRows.length.toLocaleString("en-US")} meal records`;
 
+                if (currentRows.length) document.getElementById("activeWeek").textContent = `WEEK ${currentRows[0].week}`;
+
 
 
             }

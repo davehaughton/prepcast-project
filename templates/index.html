@@ -58,7 +58,7 @@
           <span class="h-full w-1 rounded-xs bg-accent"></span>
           <span class="font-mono font-semibold text-[12px] text-slate900">Forecast</span>
         </a>
-        <a href="#" data-todo="Still to do"  class="todo group flex items-center gap-3 h-10 rounded-lg px-3 py-2 transition-colors hover:bg-surface">
+        <a href="{{ url_for('sales') }}" class="group flex items-center gap-3 h-10 rounded-lg px-3 py-2 transition-colors hover:bg-surface">
           <span class="h-full w-1 rounded-xs bg-transparent group-hover:bg-line transition-colors"></span>
           <span class="font-mono font-medium text-[12px] text-slate500 group-hover:text-slate900 transition-colors">Sales</span>
         </a>
@@ -205,7 +205,7 @@
                 <span class="font-semibold text-[12px] uppercase text-slate400">Active Period</span>
                 <svg class="size-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               </div>
-              <p class="font-mono font-semibold text-[36px] leading-none text-accent">WEEK 146</p>
+              <p id="activeWeek" class="font-mono font-semibold text-[36px] leading-none text-accent">WEEK —</p>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="size-2 rounded-full bg-accent animate-pulse"></span>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PrepCast — Record Actual Sales</title>
+        <script>
+            if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+        </script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}" />
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4" defer></script>
+        <script src="{{ url_for('static', filename='sales.js') }}" defer></script>
+    </head>
+    <body data-centre-id="{{ centre_id }}" class="bg-canvas text-slate900">
+        <div class="flex items-start min-h-screen w-full">
+
+    <!-- Mobile backdrop -->
+    <div id="backdrop" class="fixed inset-0 z-30 bg-black/40 opacity-0 pointer-events-none transition-opacity lg:hidden"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar"
+      class="fixed lg:sticky top-0 z-40 flex flex-col h-screen w-[240px] shrink-0 bg-panel border-r border-line
+             -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-out">
+      <!-- Logo -->
+      <div class="flex flex-col gap-1 px-6 pt-8 pb-6">
+        <div class="flex items-center justify-between">
+          <img src="{{ url_for('static', filename='logo.svg') }}" alt="PrepCast" class="h-9 w-auto max-w-[160px] dark:brightness-0 dark:invert" />
+          <button id="closeSidebar" class="lg:hidden text-slate500 hover:text-slate900 transition-colors" aria-label="Close menu">
+            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <p class="text-slate400 text-[11px]">Demand forecasting for food service</p>
+      </div>
+      <div class="h-px w-full bg-line"></div>
+
+      <!-- Location -->
+      <div class="p-3">
+        <div class="flex items-start gap-3 w-full bg-surface border border-line rounded-lg px-3 py-2.5 text-left">
+          <svg class="size-4 text-slate500 mt-[8px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span class="flex flex-col">
+            <span class="font-semibold text-2xl text-slate900">{{ centre_name }}</span>
+            <span class="font-mono text-[13px] text-slate900">CENTRE {{ centre_id }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <nav class="flex flex-col gap-2 p-3">
+        <a href="{{ url_for('index') }}" class="group flex items-center gap-3 h-10 rounded-lg px-3 py-2 transition-colors hover:bg-surface">
+          <span class="h-full w-1 rounded-xs bg-transparent group-hover:bg-line transition-colors"></span>
+          <span class="font-mono font-medium text-[12px] text-slate500 group-hover:text-slate900 transition-colors">Forecast</span>
+        </a>
+        <a href="{{ url_for('sales') }}" aria-current="page" class="group flex items-center gap-3 h-10 bg-surface rounded-lg px-3 py-2 ring-1 ring-transparent hover:ring-accent/30 transition-all">
+          <span class="h-full w-1 rounded-xs bg-accent"></span>
+          <span class="font-mono font-semibold text-[12px] text-slate900">Sales</span>
+        </a>
+      </nav>
+      <div class="h-px w-full bg-line"></div>
+
+      <!-- spacer -->
+      <div class="flex-1"></div>
+
+      <!-- Log out -->
+      <a href="{{ url_for('login') }}" class="group flex items-center gap-3 px-6 py-5 m-1 rounded-lg transition-colors hover:bg-surface">
+        <svg class="size-4 text-slate500 group-hover:text-danger transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="text-[13px] text-slate500 group-hover:text-slate900 transition-colors">Log Out</span>
+      </a>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex flex-col flex-1 min-w-0 self-stretch">
+      <!-- Top bar -->
+      <header class="sticky top-0 z-20 flex items-center justify-between gap-3 h-20 px-4 sm:px-6 lg:px-8 bg-surface border-b border-line">
+        <div class="flex items-center gap-3 min-w-0">
+          <button id="openSidebar" class="lg:hidden shrink-0 text-slate500 hover:text-slate900 transition-colors" aria-label="Open menu">
+            <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="flex flex-col gap-1 min-w-0">
+            <h1 class="font-bold text-[18px] sm:text-[20px] text-slate900 truncate">Record Actual Sales</h1>
+            <div class="flex items-center gap-2">
+              <span id="topWeek" class="font-mono text-[13px] sm:text-[14px] text-accent">WEEK —</span>
+              <span class="hidden sm:inline text-[12px] text-slate400 truncate">• {{ centre_name }} Centre {{ centre_id }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="themeToggle" aria-label="Toggle dark mode"
+            class="flex items-center justify-center size-9 rounded-lg border border-line text-slate500 transition-colors hover:text-slate900 hover:bg-panel focus:outline-hidden focus:ring-2 focus:ring-accent/40">
+            <svg class="theme-sun hidden size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <svg class="theme-moon size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+          </button>
+          <div class="flex items-center gap-3 px-2 sm:px-2.5 py-2 rounded-lg">
+            <span class="flex items-center justify-center size-8 rounded-2xl bg-accent">
+              <span class="font-bold text-[13px] text-ink">F</span>
+            </span>
+            <span class="hidden sm:flex flex-col gap-0.5 text-left">
+              <span class="font-semibold text-[13px] text-slate900">FreshBowl Kitchens</span>
+              <span class="text-[11px] text-slate500">Enterprise</span>
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page body -->
+      <div class="flex flex-col gap-6 lg:gap-8 p-4 sm:p-6 lg:p-8">
+
+        <!-- State banner (no committed plan / already closed) -->
+        <div id="state-banner" class="hidden items-start gap-3 p-5 border border-line rounded-xl bg-surface">
+          <svg class="size-5 text-accent shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="flex flex-col gap-1">
+            <p id="state-title" class="font-semibold text-[14px] text-slate900"></p>
+            <p id="state-msg" class="text-[13px] text-slate500"></p>
+          </div>
+        </div>
+
+        <!-- KPI row -->
+        <section id="kpi-row" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <!-- Forecast Accuracy -->
+          <div class="flex flex-col justify-between min-h-[180px] p-6 border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[12px] uppercase text-slate500">Forecast Accuracy</span>
+                <svg class="size-4 text-slate400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <p id="kpiAccuracy" class="font-mono font-semibold text-[36px] leading-none text-slate900">—</p>
+            </div>
+            <p class="text-[11px] text-slate600">Actual vs model forecast</p>
+          </div>
+
+          <!-- Buffer Used -->
+          <div class="flex flex-col justify-between min-h-[180px] p-6 border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[12px] uppercase text-slate500">Buffer Used</span>
+                <svg class="size-4 text-slate400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <p id="kpiBuffer" class="font-mono font-semibold text-[36px] leading-none text-slate900">—</p>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <div class="h-1.5 w-full rounded-full bg-line">
+                <div id="kpiBufferFill" class="h-1.5 rounded-full bg-accent transition-[width] duration-200" style="width:0%"></div>
+              </div>
+              <p class="text-[11px] text-slate600">of safety buffer consumed</p>
+            </div>
+          </div>
+
+          <!-- Service Level Achieved -->
+          <div class="flex flex-col justify-between min-h-[180px] p-6 border border-line rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[12px] uppercase text-slate500">Service Level Hit</span>
+                <svg class="size-4 text-slate400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <p id="kpiService" class="font-mono font-semibold text-[36px] leading-none text-slate900">—</p>
+            </div>
+            <p class="text-[11px] text-slate600">Meals with enough prepped</p>
+          </div>
+
+          <!-- Waste vs Shortfall -->
+          <div class="flex flex-col justify-between min-h-[180px] p-6 border border-accent rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.03)]">
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-[12px] uppercase text-slate400">Waste vs Shortfall</span>
+                <svg class="size-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="flex flex-col gap-1">
+                  <span id="kpiWaste" class="font-mono font-semibold text-[26px] leading-none text-amber-500">—</span>
+                  <span class="text-[10px] uppercase text-slate500">Over-prep</span>
+                </span>
+                <span class="flex flex-col gap-1">
+                  <span id="kpiShort" class="font-mono font-semibold text-[26px] leading-none text-danger">—</span>
+                  <span class="text-[10px] uppercase text-slate500">Under-prep</span>
+                </span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate600">Portions wasted vs missed</p>
+          </div>
+        </section>
+
+        <!-- Table -->
+        <section id="table-section" class="w-full bg-surface border border-line rounded-xl shadow-[0_2px_8px_0_rgba(0,0,0,0.03)]">
+          <!-- Table header bar -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 bg-ink rounded-t-xl">
+            <div class="flex flex-col gap-1">
+              <h2 class="font-bold text-[16px] text-white">Actual Sales</h2>
+              <p class="text-[13px] text-slate400">Enter what actually sold, compare against the plan</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button id="prefillBtn" class="px-4 py-2 rounded-lg bg-white/[0.07] border border-slate400 font-semibold text-[13px] text-slate400 transition-colors hover:bg-white/15 hover:text-white">Simulate sales</button>
+            </div>
+          </div>
+
+          <div class="min-w-[860px]">
+            <!-- Column headings (sticky) -->
+            <div class="sticky top-20 z-10 flex items-center justify-between px-6 py-3 bg-ink border-b border-white/[0.07] shadow-[0_4px_8px_rgba(0,0,0,0.15)] font-bold text-[11px] uppercase text-slate400">
+              <span class="w-[200px]">Meal / SKU</span>
+              <span class="w-[120px]">Category</span>
+              <span class="w-[110px] text-right">Forecast</span>
+              <span class="w-[110px] text-right">Buffer</span>
+              <span class="w-[110px] text-right">Planned</span>
+              <span class="w-[130px] flex justify-end">
+                <span class="px-2 py-1 rounded-sm bg-accent/10 border border-accent text-accent text-[10px]">Actual Sales</span>
+              </span>
+              <span class="w-[120px] text-right">Variance</span>
+            </div>
+
+            <!-- Rows -->
+            <div id="actual-rows"></div>
+          </div>
+
+          <!-- Table footer -->
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-5 border-t border-line bg-surface rounded-b-xl">
+            <span id="record-count" class="text-[13px] text-slate500"></span>
+            <div class="flex items-center gap-6">
+              <button id="save-actuals" class="px-4 py-2 rounded-lg bg-accent font-semibold text-[13px] text-ink transition-colors hover:bg-[#00b386] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">Save Actuals &amp; Close Week</button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+    </body>
+</html>

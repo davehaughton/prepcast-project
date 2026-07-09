@@ -245,6 +245,9 @@
   .m-1 {
     margin: var(--spacing);
   }
+  .mt-0\.5 {
+    margin-top: calc(var(--spacing) * 0.5);
+  }
   .mt-\[8px\] {
     margin-top: 8px;
   }
@@ -366,11 +369,20 @@
   .w-\[46px\] {
     width: 46px;
   }
+  .w-\[52px\] {
+    width: 52px;
+  }
   .w-\[86px\] {
     width: 86px;
   }
+  .w-\[92px\] {
+    width: 92px;
+  }
   .w-\[100px\] {
     width: 100px;
+  }
+  .w-\[110px\] {
+    width: 110px;
   }
   .w-\[120px\] {
     width: 120px;
@@ -407,6 +419,9 @@
   }
   .min-w-0 {
     min-width: 0;
+  }
+  .min-w-\[860px\] {
+    min-width: 860px;
   }
   .min-w-\[920px\] {
     min-width: 920px;
@@ -693,6 +708,9 @@
   .p-4 {
     padding: calc(var(--spacing) * 4);
   }
+  .p-5 {
+    padding: calc(var(--spacing) * 5);
+  }
   .p-6 {
     padding: calc(var(--spacing) * 6);
   }
@@ -805,6 +823,9 @@
   .text-\[18px\] {
     font-size: 18px;
   }
+  .text-\[26px\] {
+    font-size: 26px;
+  }
   .text-\[32px\] {
     font-size: 32px;
   }
@@ -867,6 +888,9 @@
   }
   .opacity-0 {
     opacity: 0%;
+  }
+  .opacity-60 {
+    opacity: 60%;
   }
   .shadow-\[0_1px_2px_0_rgba\(0\,0\,0\,0\.1\)\] {
     --tw-shadow: 0 1px 2px 0 var(--tw-shadow-color, rgba(0,0,0,0.1));
@@ -1030,6 +1054,25 @@
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
         opacity: 100%;
+      }
+    }
+  }
+  .focus-within\:border-accent {
+    &:focus-within {
+      border-color: rgb(var(--accent));
+    }
+  }
+  .focus-within\:ring-2 {
+    &:focus-within {
+      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
+  .focus-within\:ring-accent\/30 {
+    &:focus-within {
+      --tw-ring-color: rgb(var(--accent));
+      @supports (color: color-mix(in lab, red, red)) {
+        --tw-ring-color: color-mix(in oklab, rgb(var(--accent)) 30%, transparent);
       }
     }
   }
@@ -1199,6 +1242,21 @@
   .active\:scale-\[0\.98\] {
     &:active {
       scale: 0.98;
+    }
+  }
+  .disabled\:cursor-not-allowed {
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+  .disabled\:opacity-40 {
+    &:disabled {
+      opacity: 40%;
+    }
+  }
+  .disabled\:opacity-60 {
+    &:disabled {
+      opacity: 60%;
     }
   }
   .sm\:flex {
