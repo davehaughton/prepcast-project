@@ -141,8 +141,25 @@ def get_actuals():
     else:
         state = "open"
 
-    return jsonify({"centre_id": centre_id, "week": week,
-                    "state": state, "items": items})
+    # last 6 weeks of actual demand per meal -> drives the plan-vs-actual chart
+    HIST_WEEKS = 6
+    hist_weeks = list(range(week - HIST_WEEKS, week))
+    if items and hist_weeks:
+        ph = ",".join("?" * len(hist_weeks))
+        hist_df = query(
+            f"SELECT meal_id, week, num_orders FROM demand_history "
+            f"WHERE centre_id = ? AND week IN ({ph}) ORDER BY meal_id, week",
+            tuple([centre_id] + hist_weeks))
+        hist_by_meal = {
+            mid: dict(zip(g["week"], g["num_orders"]))
+            for mid, g in hist_df.groupby("meal_id")
+        }
+        for it in items:
+            wk = hist_by_meal.get(it["meal_id"], {})
+            it["history"] = [int(wk[w]) if w in wk else None for w in hist_weeks]
+
+    return jsonify({"centre_id": centre_id, "week": week, "state": state,
+                    "hist_weeks": hist_weeks, "items": items})
 
 
 # save actual sales: write history (rolls the week) + record on the plan

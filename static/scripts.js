@@ -376,7 +376,7 @@ const CENTRE_ID = document.body.dataset.centreId;   // reads data-centre-id
               });
             }
 
-            // All meals → summed weekly series
+            // All meals summary chart
             function openOverallChart() {
               const n = currentRows.length ? (currentRows[0].history || []).length : 0;
               const hist = new Array(n).fill(0);

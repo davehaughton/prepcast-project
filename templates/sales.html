@@ -125,7 +125,9 @@
             <div class="flex flex-col gap-4">
               <div class="flex items-center justify-between">
                 <span class="font-semibold text-[12px] uppercase text-slate500">Forecast Accuracy</span>
-                <svg class="size-4 text-slate400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <button id="overallChart" class="p-1 -m-1 rounded-sm text-slate400 transition-colors hover:text-accent hover:bg-accent/10 focus:outline-hidden focus:ring-2 focus:ring-accent/40" aria-label="View forecast vs actual chart">
+                  <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                </button>
               </div>
               <p id="kpiAccuracy" class="font-mono font-semibold text-[36px] leading-none text-slate900">—</p>
             </div>
@@ -196,7 +198,7 @@
             </div>
           </div>
 
-          <div class="min-w-[860px]">
+          <div class="min-w-[900px]">
             <!-- Column headings (sticky) -->
             <div class="sticky top-20 z-10 flex items-center justify-between px-6 py-3 bg-ink border-b border-white/[0.07] shadow-[0_4px_8px_rgba(0,0,0,0.15)] font-bold text-[11px] uppercase text-slate400">
               <span class="w-[200px]">Meal / SKU</span>
@@ -208,6 +210,7 @@
                 <span class="px-2 py-1 rounded-sm bg-accent/10 border border-accent text-accent text-[10px]">Actual Sales</span>
               </span>
               <span class="w-[120px] text-right">Variance</span>
+              <span class="w-10 text-center">Chart</span>
             </div>
 
             <!-- Rows -->
@@ -225,6 +228,26 @@
 
       </div>
     </main>
+  </div>
+
+  <!-- PLAN vs ACTUAL CHART MODAL -->
+  <div id="chartModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="chartBackdrop" class="absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-200"></div>
+    <div id="chartCard" class="relative w-full max-w-[760px] bg-surface rounded-xl border border-line shadow-[0_20px_60px_rgba(0,0,0,0.25)] opacity-0 scale-95 transition-all duration-200">
+      <div class="flex items-start justify-between p-6 pb-3">
+        <div class="flex flex-col gap-1">
+          <h3 id="chartTitle" class="font-bold text-[16px] text-slate900">Meal</h3>
+          <p id="chartSub" class="text-[13px] text-slate500">Weekly demand · forecast vs actual</p>
+        </div>
+        <button id="chartClose" class="text-slate400 hover:text-slate900 transition-colors" aria-label="Close">
+          <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="chartStats" class="flex flex-wrap gap-2 px-6 pb-3"></div>
+      <div class="px-6 pb-6">
+        <div class="h-[420px]"><canvas id="rowChart"></canvas></div>
+      </div>
+    </div>
   </div>
     </body>
 </html>
